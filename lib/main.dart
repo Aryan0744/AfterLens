@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/branding/afterlens_logo.dart';
+import 'core/theme/app_theme.dart';
+
 void main() {
   runApp(const ProviderScope(child: AfterLensApp()));
 }
@@ -12,16 +15,26 @@ class AfterLensApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'AfterLens',
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0B0D10),
-        useMaterial3: true,
-      ),
-      home: const Scaffold(
-        body: Center(
-          child: Text(
-            'AfterLens',
-            style: TextStyle(color: Color(0xFFE4E7EB), fontSize: 24),
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.system,
+      home: const BrandPreviewScreen(),
+    );
+  }
+}
+
+class BrandPreviewScreen extends StatelessWidget {
+  const BrandPreviewScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(32),
+            child: AfterLensLogo(width: 240),
           ),
         ),
       ),
