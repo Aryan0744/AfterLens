@@ -24,6 +24,11 @@ def main():
     subprocess.run(
         ["dart", "run", "flutter_native_splash:create"], cwd=ROOT, check=True
     )
+    for resource in (ROOT / "android/app/src/main/res").rglob("*.xml"):
+        text = resource.read_text()
+        cleaned = "\n".join(line.rstrip() for line in text.splitlines()) + "\n"
+        if cleaned != text:
+            resource.write_text(cleaned)
 
 
 if __name__ == "__main__":

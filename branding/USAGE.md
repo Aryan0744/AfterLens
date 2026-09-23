@@ -112,7 +112,8 @@ generated files or a passing build for visual verification on a device.
 - Chrome: light/dark previews visually checked, correct title/favicon/theme
   metadata, all PWA icons served, no browser runtime errors.
 - Pixel 8 / Android 15: app installed and launched; circular launcher icon and
-  AfterLens display name checked. Native splash uses the mark on Navy.
+  AfterLens display name checked. Native splash uses the mark on Navy, and
+  light/dark Flutter previews were visually verified after cold starts.
 - Native asset checks: all iOS icons are RGB at the catalog dimensions; Android
   resource XML and web icon sizes validate; Android 12 artwork fits its safe
   circle. Regeneration preserves unrelated Xcode asset settings.

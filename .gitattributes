@@ -1,0 +1,3 @@
+# Preserve print handoff assets byte-for-byte; SVGs remain reviewable text.
+*.pdf binary
+*.eps binary
