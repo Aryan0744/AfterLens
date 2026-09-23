@@ -1,0 +1,15 @@
+{
+  "brand": "AfterLens",
+  "tagline": "Spend with better hindsight.",
+  "colors": {
+    "deepNavy": "#0B1F33",
+    "cyan": "#00C2E6",
+    "coral": "#FF7B6E",
+    "offWhite": "#F4F7FA"
+  },
+  "usage": {
+    "lightBackground": "afterlens-primary-light",
+    "darkBackground": "afterlens-primary-dark",
+    "smallIcon": "afterlens-favicon"
+  }
+}
