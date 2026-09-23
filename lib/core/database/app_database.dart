@@ -4,18 +4,19 @@ import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../../features/categories/data/categories_table.dart';
 import '../../features/transactions/data/transactions_table.dart';
 import '../../features/mood_engine/data/regret_checkins_table.dart';
 import '../../features/profile/data/profiles_table.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [Profiles, Transactions, RegretCheckins])
+@DriftDatabase(tables: [Profiles, Categories, Transactions, RegretCheckins])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
@@ -27,6 +28,10 @@ class AppDatabase extends _$AppDatabase {
         if (from < 2) {
           await m.createTable(profiles);
         }
+
+      if (from < 3) {
+        await m.createTable(categories);
+      }
       },
       beforeOpen: (details) async {
         await customStatement('PRAGMA foreign_keys = ON');
