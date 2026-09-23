@@ -1,0 +1,17 @@
+flutter_native_splash:
+  color: "#0B1F33"
+  color_dark: "#0B1F33"
+  image: assets/brand/native/afterlens-splash.png
+  image_dark: assets/brand/native/afterlens-splash.png
+  android: true
+  ios: true
+  web: false
+  android_gravity: center
+  ios_content_mode: center
+  android_12:
+    color: "#0B1F33"
+    color_dark: "#0B1F33"
+    image: assets/brand/native/afterlens-splash-android12.png
+    image_dark: assets/brand/native/afterlens-splash-android12.png
+    icon_background_color: "#0B1F33"
+    icon_background_color_dark: "#0B1F33"
