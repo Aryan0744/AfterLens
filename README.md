@@ -1,21 +1,27 @@
 
-# afterlens
-
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
 # AfterLens
-A cross-platform personal finance app that forecasts safe-to-spend using regret data. Tag purchases by mood; impulse buys over $15 trigger a delayed "still glad about that?" check-in, building a personal regret score that sharpens your forecast over time. Built with Flutter, Riverpod, and Drift.
 
+Spend with better hindsight.
+
+AfterLens is a privacy-first personal finance and spending reflection application
+built with Flutter, Riverpod, and Drift. The product direction combines spending
+forecasts with mood and regret check-ins. The current app contains the database
+foundation and a branded preview screen; financial workflows are still to come.
+
+## Development
+
+```sh
+flutter pub get
+flutter run
+```
+
+Use `flutter analyze` and `flutter test` for checks. The preview follows the system
+light/dark setting and uses the approved SVG logo. Interface typography and the
+full product design system will be defined separately.
+
+## Branding
+
+See [brand usage and regeneration](branding/USAGE.md) for asset selection, native
+icon/splash generation, accessibility rules, and the release visual checklist.
+The complete source package and overview PDF are archived in `branding/source/`;
+only runtime logo SVGs are included in Flutter's asset bundle.
