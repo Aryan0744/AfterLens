@@ -476,6 +476,18 @@ class $CategoriesTable extends Categories
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -484,6 +496,7 @@ class $CategoriesTable extends Categories
     systemKey,
     isArchived,
     createdAt,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -536,6 +549,12 @@ class $CategoriesTable extends Categories
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -569,6 +588,10 @@ class $CategoriesTable extends Categories
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
     );
   }
 
@@ -585,6 +608,7 @@ class Category extends DataClass implements Insertable<Category> {
   final String? systemKey;
   final bool isArchived;
   final DateTime createdAt;
+  final DateTime updatedAt;
   const Category({
     required this.id,
     required this.profileId,
@@ -592,6 +616,7 @@ class Category extends DataClass implements Insertable<Category> {
     this.systemKey,
     required this.isArchived,
     required this.createdAt,
+    required this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -604,6 +629,7 @@ class Category extends DataClass implements Insertable<Category> {
     }
     map['is_archived'] = Variable<bool>(isArchived);
     map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
 
@@ -617,6 +643,7 @@ class Category extends DataClass implements Insertable<Category> {
           : Value(systemKey),
       isArchived: Value(isArchived),
       createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
     );
   }
 
@@ -632,6 +659,7 @@ class Category extends DataClass implements Insertable<Category> {
       systemKey: serializer.fromJson<String?>(json['systemKey']),
       isArchived: serializer.fromJson<bool>(json['isArchived']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
   @override
@@ -644,6 +672,7 @@ class Category extends DataClass implements Insertable<Category> {
       'systemKey': serializer.toJson<String?>(systemKey),
       'isArchived': serializer.toJson<bool>(isArchived),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
 
@@ -654,6 +683,7 @@ class Category extends DataClass implements Insertable<Category> {
     Value<String?> systemKey = const Value.absent(),
     bool? isArchived,
     DateTime? createdAt,
+    DateTime? updatedAt,
   }) => Category(
     id: id ?? this.id,
     profileId: profileId ?? this.profileId,
@@ -661,6 +691,7 @@ class Category extends DataClass implements Insertable<Category> {
     systemKey: systemKey.present ? systemKey.value : this.systemKey,
     isArchived: isArchived ?? this.isArchived,
     createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
   );
   Category copyWithCompanion(CategoriesCompanion data) {
     return Category(
@@ -672,6 +703,7 @@ class Category extends DataClass implements Insertable<Category> {
           ? data.isArchived.value
           : this.isArchived,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -683,14 +715,22 @@ class Category extends DataClass implements Insertable<Category> {
           ..write('name: $name, ')
           ..write('systemKey: $systemKey, ')
           ..write('isArchived: $isArchived, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, profileId, name, systemKey, isArchived, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    profileId,
+    name,
+    systemKey,
+    isArchived,
+    createdAt,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -700,7 +740,8 @@ class Category extends DataClass implements Insertable<Category> {
           other.name == this.name &&
           other.systemKey == this.systemKey &&
           other.isArchived == this.isArchived &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
 }
 
 class CategoriesCompanion extends UpdateCompanion<Category> {
@@ -710,6 +751,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
   final Value<String?> systemKey;
   final Value<bool> isArchived;
   final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const CategoriesCompanion({
     this.id = const Value.absent(),
@@ -718,6 +760,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     this.systemKey = const Value.absent(),
     this.isArchived = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CategoriesCompanion.insert({
@@ -727,6 +770,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     this.systemKey = const Value.absent(),
     this.isArchived = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        profileId = Value(profileId),
@@ -738,6 +782,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     Expression<String>? systemKey,
     Expression<bool>? isArchived,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -747,6 +792,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       if (systemKey != null) 'system_key': systemKey,
       if (isArchived != null) 'is_archived': isArchived,
       if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -758,6 +804,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     Value<String?>? systemKey,
     Value<bool>? isArchived,
     Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
     return CategoriesCompanion(
@@ -767,6 +814,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       systemKey: systemKey ?? this.systemKey,
       isArchived: isArchived ?? this.isArchived,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -792,6 +840,9 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -807,6 +858,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
           ..write('systemKey: $systemKey, ')
           ..write('isArchived: $isArchived, ')
           ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -828,13 +880,56 @@ class $TransactionsTable extends Transactions
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  static const VerificationMeta _profileIdMeta = const VerificationMeta(
+    'profileId',
+  );
   @override
-  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
-    'amount',
+  late final GeneratedColumn<String> profileId = GeneratedColumn<String>(
+    'profile_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES profiles (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
+  @override
+  late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
+    'category_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES categories (id) ON DELETE RESTRICT',
+    ),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<TransactionType, String>
+  transactionType =
+      GeneratedColumn<String>(
+        'transaction_type',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: Constant(TransactionType.expense.name),
+      ).withConverter<TransactionType>(
+        $TransactionsTable.$convertertransactionType,
+      );
+  static const VerificationMeta _amountCentsMeta = const VerificationMeta(
+    'amountCents',
+  );
+  @override
+  late final GeneratedColumn<int> amountCents = GeneratedColumn<int>(
+    'amount_cents',
     aliasedName,
     false,
-    type: DriftSqlType.double,
+    type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
   static const VerificationMeta _descriptionMeta = const VerificationMeta(
@@ -844,23 +939,35 @@ class $TransactionsTable extends Transactions
   late final GeneratedColumn<String> description = GeneratedColumn<String>(
     'description',
     aliasedName,
-    false,
+    true,
     additionalChecks: GeneratedColumn.checkTextLength(
       minTextLength: 1,
       maxTextLength: 200,
     ),
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
   );
   @override
-  late final GeneratedColumnWithTypeConverter<MoodTag, int> moodTag =
-      GeneratedColumn<int>(
+  late final GeneratedColumnWithTypeConverter<MoodTag?, String> moodTag =
+      GeneratedColumn<String>(
         'mood_tag',
         aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      ).withConverter<MoodTag?>($TransactionsTable.$convertermoodTagn);
+  static const VerificationMeta _transactionDateMeta = const VerificationMeta(
+    'transactionDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> transactionDate =
+      GeneratedColumn<DateTime>(
+        'transaction_date',
+        aliasedName,
         false,
-        type: DriftSqlType.int,
+        type: DriftSqlType.dateTime,
         requiredDuringInsert: true,
-      ).withConverter<MoodTag>($TransactionsTable.$convertermoodTag);
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -888,9 +995,13 @@ class $TransactionsTable extends Transactions
   @override
   List<GeneratedColumn> get $columns => [
     id,
-    amount,
+    profileId,
+    categoryId,
+    transactionType,
+    amountCents,
     description,
     moodTag,
+    transactionDate,
     createdAt,
     updatedAt,
   ];
@@ -911,13 +1022,28 @@ class $TransactionsTable extends Transactions
     } else if (isInserting) {
       context.missing(_idMeta);
     }
-    if (data.containsKey('amount')) {
+    if (data.containsKey('profile_id')) {
       context.handle(
-        _amountMeta,
-        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+        _profileIdMeta,
+        profileId.isAcceptableOrUnknown(data['profile_id']!, _profileIdMeta),
+      );
+    }
+    if (data.containsKey('category_id')) {
+      context.handle(
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
+    }
+    if (data.containsKey('amount_cents')) {
+      context.handle(
+        _amountCentsMeta,
+        amountCents.isAcceptableOrUnknown(
+          data['amount_cents']!,
+          _amountCentsMeta,
+        ),
       );
     } else if (isInserting) {
-      context.missing(_amountMeta);
+      context.missing(_amountCentsMeta);
     }
     if (data.containsKey('description')) {
       context.handle(
@@ -927,8 +1053,17 @@ class $TransactionsTable extends Transactions
           _descriptionMeta,
         ),
       );
+    }
+    if (data.containsKey('transaction_date')) {
+      context.handle(
+        _transactionDateMeta,
+        transactionDate.isAcceptableOrUnknown(
+          data['transaction_date']!,
+          _transactionDateMeta,
+        ),
+      );
     } else if (isInserting) {
-      context.missing(_descriptionMeta);
+      context.missing(_transactionDateMeta);
     }
     if (data.containsKey('created_at')) {
       context.handle(
@@ -955,20 +1090,38 @@ class $TransactionsTable extends Transactions
         DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
-      amount: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}amount'],
+      profileId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}profile_id'],
+      ),
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_id'],
+      ),
+      transactionType: $TransactionsTable.$convertertransactionType.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}transaction_type'],
+        )!,
+      ),
+      amountCents: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount_cents'],
       )!,
       description: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}description'],
-      )!,
-      moodTag: $TransactionsTable.$convertermoodTag.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.int,
-          data['${effectivePrefix}mood_tag'],
-        )!,
       ),
+      moodTag: $TransactionsTable.$convertermoodTagn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}mood_tag'],
+        ),
+      ),
+      transactionDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}transaction_date'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -985,22 +1138,70 @@ class $TransactionsTable extends Transactions
     return $TransactionsTable(attachedDatabase, alias);
   }
 
-  static JsonTypeConverter2<MoodTag, int, int> $convertermoodTag =
-      const EnumIndexConverter<MoodTag>(MoodTag.values);
+  static JsonTypeConverter2<TransactionType, String, String>
+  $convertertransactionType = const EnumNameConverter<TransactionType>(
+    TransactionType.values,
+  );
+  static JsonTypeConverter2<MoodTag, String, String> $convertermoodTag =
+      const EnumNameConverter<MoodTag>(MoodTag.values);
+  static JsonTypeConverter2<MoodTag?, String?, String?> $convertermoodTagn =
+      JsonTypeConverter2.asNullable($convertermoodTag);
 }
 
 class Transaction extends DataClass implements Insertable<Transaction> {
+  /// Unique identifier for the transaction.
+  ///
+  /// IDs will be generated as UUID strings by the application layer.
   final String id;
-  final double amount;
-  final String description;
-  final MoodTag moodTag;
+
+  /// Profile that owns this transaction.
+  ///
+  /// Temporarily nullable so existing V3 transactions can be migrated
+  /// safely. New V1 application logic will require a profile.
+  final String? profileId;
+
+  /// Spending category associated with this transaction.
+  ///
+  /// Temporarily nullable for legacy V3 rows.
+  final String? categoryId;
+
+  /// Whether this record represents money coming in or going out.
+  ///
+  /// Stored as text ("expense" / "income") instead of an enum index.
+  final TransactionType transactionType;
+
+  /// Monetary amount stored in minor currency units.
+  ///
+  /// Examples:
+  /// CAD 19.99 -> 1999
+  /// CAD 125.00 -> 12500
+  final int amountCents;
+
+  /// Optional user-facing transaction description.
+  final String? description;
+
+  /// Behavioural spending tag.
+  ///
+  /// Stored using the enum name rather than enum index.
+  final MoodTag? moodTag;
+
+  /// When the financial event actually occurred.
+  final DateTime transactionDate;
+
+  /// When this record was created inside AfterLens.
   final DateTime createdAt;
+
+  /// When this record was last modified.
   final DateTime updatedAt;
   const Transaction({
     required this.id,
-    required this.amount,
-    required this.description,
-    required this.moodTag,
+    this.profileId,
+    this.categoryId,
+    required this.transactionType,
+    required this.amountCents,
+    this.description,
+    this.moodTag,
+    required this.transactionDate,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -1008,13 +1209,27 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
-    map['amount'] = Variable<double>(amount);
-    map['description'] = Variable<String>(description);
+    if (!nullToAbsent || profileId != null) {
+      map['profile_id'] = Variable<String>(profileId);
+    }
+    if (!nullToAbsent || categoryId != null) {
+      map['category_id'] = Variable<String>(categoryId);
+    }
     {
-      map['mood_tag'] = Variable<int>(
-        $TransactionsTable.$convertermoodTag.toSql(moodTag),
+      map['transaction_type'] = Variable<String>(
+        $TransactionsTable.$convertertransactionType.toSql(transactionType),
       );
     }
+    map['amount_cents'] = Variable<int>(amountCents);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    if (!nullToAbsent || moodTag != null) {
+      map['mood_tag'] = Variable<String>(
+        $TransactionsTable.$convertermoodTagn.toSql(moodTag),
+      );
+    }
+    map['transaction_date'] = Variable<DateTime>(transactionDate);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -1023,9 +1238,21 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   TransactionsCompanion toCompanion(bool nullToAbsent) {
     return TransactionsCompanion(
       id: Value(id),
-      amount: Value(amount),
-      description: Value(description),
-      moodTag: Value(moodTag),
+      profileId: profileId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(profileId),
+      categoryId: categoryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoryId),
+      transactionType: Value(transactionType),
+      amountCents: Value(amountCents),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      moodTag: moodTag == null && nullToAbsent
+          ? const Value.absent()
+          : Value(moodTag),
+      transactionDate: Value(transactionDate),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -1038,11 +1265,17 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Transaction(
       id: serializer.fromJson<String>(json['id']),
-      amount: serializer.fromJson<double>(json['amount']),
-      description: serializer.fromJson<String>(json['description']),
-      moodTag: $TransactionsTable.$convertermoodTag.fromJson(
-        serializer.fromJson<int>(json['moodTag']),
+      profileId: serializer.fromJson<String?>(json['profileId']),
+      categoryId: serializer.fromJson<String?>(json['categoryId']),
+      transactionType: $TransactionsTable.$convertertransactionType.fromJson(
+        serializer.fromJson<String>(json['transactionType']),
       ),
+      amountCents: serializer.fromJson<int>(json['amountCents']),
+      description: serializer.fromJson<String?>(json['description']),
+      moodTag: $TransactionsTable.$convertermoodTagn.fromJson(
+        serializer.fromJson<String?>(json['moodTag']),
+      ),
+      transactionDate: serializer.fromJson<DateTime>(json['transactionDate']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -1052,11 +1285,17 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
-      'amount': serializer.toJson<double>(amount),
-      'description': serializer.toJson<String>(description),
-      'moodTag': serializer.toJson<int>(
-        $TransactionsTable.$convertermoodTag.toJson(moodTag),
+      'profileId': serializer.toJson<String?>(profileId),
+      'categoryId': serializer.toJson<String?>(categoryId),
+      'transactionType': serializer.toJson<String>(
+        $TransactionsTable.$convertertransactionType.toJson(transactionType),
       ),
+      'amountCents': serializer.toJson<int>(amountCents),
+      'description': serializer.toJson<String?>(description),
+      'moodTag': serializer.toJson<String?>(
+        $TransactionsTable.$convertermoodTagn.toJson(moodTag),
+      ),
+      'transactionDate': serializer.toJson<DateTime>(transactionDate),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -1064,27 +1303,47 @@ class Transaction extends DataClass implements Insertable<Transaction> {
 
   Transaction copyWith({
     String? id,
-    double? amount,
-    String? description,
-    MoodTag? moodTag,
+    Value<String?> profileId = const Value.absent(),
+    Value<String?> categoryId = const Value.absent(),
+    TransactionType? transactionType,
+    int? amountCents,
+    Value<String?> description = const Value.absent(),
+    Value<MoodTag?> moodTag = const Value.absent(),
+    DateTime? transactionDate,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => Transaction(
     id: id ?? this.id,
-    amount: amount ?? this.amount,
-    description: description ?? this.description,
-    moodTag: moodTag ?? this.moodTag,
+    profileId: profileId.present ? profileId.value : this.profileId,
+    categoryId: categoryId.present ? categoryId.value : this.categoryId,
+    transactionType: transactionType ?? this.transactionType,
+    amountCents: amountCents ?? this.amountCents,
+    description: description.present ? description.value : this.description,
+    moodTag: moodTag.present ? moodTag.value : this.moodTag,
+    transactionDate: transactionDate ?? this.transactionDate,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   Transaction copyWithCompanion(TransactionsCompanion data) {
     return Transaction(
       id: data.id.present ? data.id.value : this.id,
-      amount: data.amount.present ? data.amount.value : this.amount,
+      profileId: data.profileId.present ? data.profileId.value : this.profileId,
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
+      transactionType: data.transactionType.present
+          ? data.transactionType.value
+          : this.transactionType,
+      amountCents: data.amountCents.present
+          ? data.amountCents.value
+          : this.amountCents,
       description: data.description.present
           ? data.description.value
           : this.description,
       moodTag: data.moodTag.present ? data.moodTag.value : this.moodTag,
+      transactionDate: data.transactionDate.present
+          ? data.transactionDate.value
+          : this.transactionDate,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -1094,9 +1353,13 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   String toString() {
     return (StringBuffer('Transaction(')
           ..write('id: $id, ')
-          ..write('amount: $amount, ')
+          ..write('profileId: $profileId, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('transactionType: $transactionType, ')
+          ..write('amountCents: $amountCents, ')
           ..write('description: $description, ')
           ..write('moodTag: $moodTag, ')
+          ..write('transactionDate: $transactionDate, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -1104,63 +1367,96 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, amount, description, moodTag, createdAt, updatedAt);
+  int get hashCode => Object.hash(
+    id,
+    profileId,
+    categoryId,
+    transactionType,
+    amountCents,
+    description,
+    moodTag,
+    transactionDate,
+    createdAt,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Transaction &&
           other.id == this.id &&
-          other.amount == this.amount &&
+          other.profileId == this.profileId &&
+          other.categoryId == this.categoryId &&
+          other.transactionType == this.transactionType &&
+          other.amountCents == this.amountCents &&
           other.description == this.description &&
           other.moodTag == this.moodTag &&
+          other.transactionDate == this.transactionDate &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
 
 class TransactionsCompanion extends UpdateCompanion<Transaction> {
   final Value<String> id;
-  final Value<double> amount;
-  final Value<String> description;
-  final Value<MoodTag> moodTag;
+  final Value<String?> profileId;
+  final Value<String?> categoryId;
+  final Value<TransactionType> transactionType;
+  final Value<int> amountCents;
+  final Value<String?> description;
+  final Value<MoodTag?> moodTag;
+  final Value<DateTime> transactionDate;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const TransactionsCompanion({
     this.id = const Value.absent(),
-    this.amount = const Value.absent(),
+    this.profileId = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.transactionType = const Value.absent(),
+    this.amountCents = const Value.absent(),
     this.description = const Value.absent(),
     this.moodTag = const Value.absent(),
+    this.transactionDate = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TransactionsCompanion.insert({
     required String id,
-    required double amount,
-    required String description,
-    required MoodTag moodTag,
+    this.profileId = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.transactionType = const Value.absent(),
+    required int amountCents,
+    this.description = const Value.absent(),
+    this.moodTag = const Value.absent(),
+    required DateTime transactionDate,
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       amount = Value(amount),
-       description = Value(description),
-       moodTag = Value(moodTag);
+       amountCents = Value(amountCents),
+       transactionDate = Value(transactionDate);
   static Insertable<Transaction> custom({
     Expression<String>? id,
-    Expression<double>? amount,
+    Expression<String>? profileId,
+    Expression<String>? categoryId,
+    Expression<String>? transactionType,
+    Expression<int>? amountCents,
     Expression<String>? description,
-    Expression<int>? moodTag,
+    Expression<String>? moodTag,
+    Expression<DateTime>? transactionDate,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (amount != null) 'amount': amount,
+      if (profileId != null) 'profile_id': profileId,
+      if (categoryId != null) 'category_id': categoryId,
+      if (transactionType != null) 'transaction_type': transactionType,
+      if (amountCents != null) 'amount_cents': amountCents,
       if (description != null) 'description': description,
       if (moodTag != null) 'mood_tag': moodTag,
+      if (transactionDate != null) 'transaction_date': transactionDate,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -1169,18 +1465,26 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
 
   TransactionsCompanion copyWith({
     Value<String>? id,
-    Value<double>? amount,
-    Value<String>? description,
-    Value<MoodTag>? moodTag,
+    Value<String?>? profileId,
+    Value<String?>? categoryId,
+    Value<TransactionType>? transactionType,
+    Value<int>? amountCents,
+    Value<String?>? description,
+    Value<MoodTag?>? moodTag,
+    Value<DateTime>? transactionDate,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
     return TransactionsCompanion(
       id: id ?? this.id,
-      amount: amount ?? this.amount,
+      profileId: profileId ?? this.profileId,
+      categoryId: categoryId ?? this.categoryId,
+      transactionType: transactionType ?? this.transactionType,
+      amountCents: amountCents ?? this.amountCents,
       description: description ?? this.description,
       moodTag: moodTag ?? this.moodTag,
+      transactionDate: transactionDate ?? this.transactionDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -1193,16 +1497,32 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
-    if (amount.present) {
-      map['amount'] = Variable<double>(amount.value);
+    if (profileId.present) {
+      map['profile_id'] = Variable<String>(profileId.value);
+    }
+    if (categoryId.present) {
+      map['category_id'] = Variable<String>(categoryId.value);
+    }
+    if (transactionType.present) {
+      map['transaction_type'] = Variable<String>(
+        $TransactionsTable.$convertertransactionType.toSql(
+          transactionType.value,
+        ),
+      );
+    }
+    if (amountCents.present) {
+      map['amount_cents'] = Variable<int>(amountCents.value);
     }
     if (description.present) {
       map['description'] = Variable<String>(description.value);
     }
     if (moodTag.present) {
-      map['mood_tag'] = Variable<int>(
-        $TransactionsTable.$convertermoodTag.toSql(moodTag.value),
+      map['mood_tag'] = Variable<String>(
+        $TransactionsTable.$convertermoodTagn.toSql(moodTag.value),
       );
+    }
+    if (transactionDate.present) {
+      map['transaction_date'] = Variable<DateTime>(transactionDate.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -1220,9 +1540,13 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
   String toString() {
     return (StringBuffer('TransactionsCompanion(')
           ..write('id: $id, ')
-          ..write('amount: $amount, ')
+          ..write('profileId: $profileId, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('transactionType: $transactionType, ')
+          ..write('amountCents: $amountCents, ')
           ..write('description: $description, ')
           ..write('moodTag: $moodTag, ')
+          ..write('transactionDate: $transactionDate, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -1693,6 +2017,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       ),
       result: [TableUpdate('categories', kind: UpdateKind.delete)],
     ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'profiles',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('transactions', kind: UpdateKind.delete)],
+    ),
   ]);
 }
 
@@ -1730,6 +2061,24 @@ final class $$ProfilesTableReferences
     ).filter((f) => f.profileId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_categoriesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$TransactionsTable, List<Transaction>>
+  _transactionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.transactions,
+    aliasName: 'profiles__id__transactions__profile_id',
+  );
+
+  $$TransactionsTableProcessedTableManager get transactionsRefs {
+    final manager = $$TransactionsTableTableManager(
+      $_db,
+      $_db.transactions,
+    ).filter((f) => f.profileId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_transactionsRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -1786,6 +2135,31 @@ class $$ProfilesTableFilterComposer
           }) => $$CategoriesTableFilterComposer(
             $db: $db,
             $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> transactionsRefs(
+    Expression<bool> Function($$TransactionsTableFilterComposer f) f,
+  ) {
+    final $$TransactionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.profileId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableFilterComposer(
+            $db: $db,
+            $table: $db.transactions,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -1883,6 +2257,31 @@ class $$ProfilesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> transactionsRefs<T extends Object>(
+    Expression<T> Function($$TransactionsTableAnnotationComposer a) f,
+  ) {
+    final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.profileId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ProfilesTableTableManager
@@ -1898,7 +2297,7 @@ class $$ProfilesTableTableManager
           $$ProfilesTableUpdateCompanionBuilder,
           (Profile, $$ProfilesTableReferences),
           Profile,
-          PrefetchHooks Function({bool categoriesRefs})
+          PrefetchHooks Function({bool categoriesRefs, bool transactionsRefs})
         > {
   $$ProfilesTableTableManager(_$AppDatabase db, $ProfilesTable table)
     : super(
@@ -1951,35 +2350,63 @@ class $$ProfilesTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({categoriesRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [if (categoriesRefs) db.categories],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (categoriesRefs)
-                    await $_getPrefetchedData<
-                      Profile,
-                      $ProfilesTable,
-                      Category
-                    >(
-                      currentTable: table,
-                      referencedTable: $$ProfilesTableReferences
-                          ._categoriesRefsTable(db),
-                      managerFromTypedResult: (p0) => $$ProfilesTableReferences(
-                        db,
-                        table,
-                        p0,
-                      ).categoriesRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.profileId == item.id),
-                      typedResults: items,
-                    ),
-                ];
+          prefetchHooksCallback:
+              ({categoriesRefs = false, transactionsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (categoriesRefs) db.categories,
+                    if (transactionsRefs) db.transactions,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (categoriesRefs)
+                        await $_getPrefetchedData<
+                          Profile,
+                          $ProfilesTable,
+                          Category
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ProfilesTableReferences
+                              ._categoriesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ProfilesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).categoriesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.profileId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (transactionsRefs)
+                        await $_getPrefetchedData<
+                          Profile,
+                          $ProfilesTable,
+                          Transaction
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ProfilesTableReferences
+                              ._transactionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ProfilesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).transactionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.profileId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -1996,7 +2423,7 @@ typedef $$ProfilesTableProcessedTableManager =
       $$ProfilesTableUpdateCompanionBuilder,
       (Profile, $$ProfilesTableReferences),
       Profile,
-      PrefetchHooks Function({bool categoriesRefs})
+      PrefetchHooks Function({bool categoriesRefs, bool transactionsRefs})
     >;
 typedef $$CategoriesTableCreateCompanionBuilder = CategoriesCompanion Function({
   required String id,
@@ -2005,6 +2432,7 @@ typedef $$CategoriesTableCreateCompanionBuilder = CategoriesCompanion Function({
   Value<String?> systemKey,
   Value<bool> isArchived,
   Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
   Value<int> rowid,
 });
 typedef $$CategoriesTableUpdateCompanionBuilder = CategoriesCompanion Function({
@@ -2014,6 +2442,7 @@ typedef $$CategoriesTableUpdateCompanionBuilder = CategoriesCompanion Function({
   Value<String?> systemKey,
   Value<bool> isArchived,
   Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
   Value<int> rowid,
 });
 
@@ -2035,6 +2464,24 @@ final class $$CategoriesTableReferences
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$TransactionsTable, List<Transaction>>
+  _transactionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.transactions,
+    aliasName: 'categories__id__transactions__category_id',
+  );
+
+  $$TransactionsTableProcessedTableManager get transactionsRefs {
+    final manager = $$TransactionsTableTableManager(
+      $_db,
+      $_db.transactions,
+    ).filter((f) => f.categoryId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_transactionsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
     );
   }
 }
@@ -2073,6 +2520,11 @@ class $$CategoriesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$ProfilesTableFilterComposer get profileId {
     final $$ProfilesTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -2094,6 +2546,31 @@ class $$CategoriesTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> transactionsRefs(
+    Expression<bool> Function($$TransactionsTableFilterComposer f) f,
+  ) {
+    final $$TransactionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.categoryId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableFilterComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 }
 
@@ -2128,6 +2605,11 @@ class $$CategoriesTableOrderingComposer
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2181,6 +2663,9 @@ class $$CategoriesTableAnnotationComposer
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
   $$ProfilesTableAnnotationComposer get profileId {
     final $$ProfilesTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -2203,6 +2688,31 @@ class $$CategoriesTableAnnotationComposer
     );
     return composer;
   }
+
+  Expression<T> transactionsRefs<T extends Object>(
+    Expression<T> Function($$TransactionsTableAnnotationComposer a) f,
+  ) {
+    final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.categoryId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$CategoriesTableTableManager
@@ -2218,7 +2728,7 @@ class $$CategoriesTableTableManager
           $$CategoriesTableUpdateCompanionBuilder,
           (Category, $$CategoriesTableReferences),
           Category,
-          PrefetchHooks Function({bool profileId})
+          PrefetchHooks Function({bool profileId, bool transactionsRefs})
         > {
   $$CategoriesTableTableManager(_$AppDatabase db, $CategoriesTable table)
     : super(
@@ -2239,6 +2749,7 @@ class $$CategoriesTableTableManager
                 Value<String?> systemKey = const Value.absent(),
                 Value<bool> isArchived = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CategoriesCompanion(
                 id: id,
@@ -2247,6 +2758,7 @@ class $$CategoriesTableTableManager
                 systemKey: systemKey,
                 isArchived: isArchived,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -2257,6 +2769,7 @@ class $$CategoriesTableTableManager
                 Value<String?> systemKey = const Value.absent(),
                 Value<bool> isArchived = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CategoriesCompanion.insert(
                 id: id,
@@ -2265,6 +2778,7 @@ class $$CategoriesTableTableManager
                 systemKey: systemKey,
                 isArchived: isArchived,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -2275,45 +2789,70 @@ class $$CategoriesTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({profileId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (profileId) {
-                      state = state.withJoin(
-                        currentTable: table,
-                        currentColumn: table.profileId,
-                        referencedTable: $$CategoriesTableReferences
-                            ._profileIdTable(db),
-                        referencedColumn: $$CategoriesTableReferences
-                            ._profileIdTable(db)
-                            .id,
-                      ) as T;
-                    }
+          prefetchHooksCallback:
+              ({profileId = false, transactionsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (transactionsRefs) db.transactions,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (profileId) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.profileId,
+                            referencedTable: $$CategoriesTableReferences
+                                ._profileIdTable(db),
+                            referencedColumn: $$CategoriesTableReferences
+                                ._profileIdTable(db)
+                                .id,
+                          ) as T;
+                        }
 
-                    return state;
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (transactionsRefs)
+                        await $_getPrefetchedData<
+                          Category,
+                          $CategoriesTable,
+                          Transaction
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CategoriesTableReferences
+                              ._transactionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$CategoriesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).transactionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.categoryId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
                   },
-              getPrefetchedDataCallback: (items) async {
-                return [];
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -2330,14 +2869,18 @@ typedef $$CategoriesTableProcessedTableManager =
       $$CategoriesTableUpdateCompanionBuilder,
       (Category, $$CategoriesTableReferences),
       Category,
-      PrefetchHooks Function({bool profileId})
+      PrefetchHooks Function({bool profileId, bool transactionsRefs})
     >;
 typedef $$TransactionsTableCreateCompanionBuilder =
     TransactionsCompanion Function({
       required String id,
-      required double amount,
-      required String description,
-      required MoodTag moodTag,
+      Value<String?> profileId,
+      Value<String?> categoryId,
+      Value<TransactionType> transactionType,
+      required int amountCents,
+      Value<String?> description,
+      Value<MoodTag?> moodTag,
+      required DateTime transactionDate,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -2345,9 +2888,13 @@ typedef $$TransactionsTableCreateCompanionBuilder =
 typedef $$TransactionsTableUpdateCompanionBuilder =
     TransactionsCompanion Function({
       Value<String> id,
-      Value<double> amount,
-      Value<String> description,
-      Value<MoodTag> moodTag,
+      Value<String?> profileId,
+      Value<String?> categoryId,
+      Value<TransactionType> transactionType,
+      Value<int> amountCents,
+      Value<String?> description,
+      Value<MoodTag?> moodTag,
+      Value<DateTime> transactionDate,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -2356,6 +2903,40 @@ typedef $$TransactionsTableUpdateCompanionBuilder =
 final class $$TransactionsTableReferences
     extends BaseReferences<_$AppDatabase, $TransactionsTable, Transaction> {
   $$TransactionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $ProfilesTable _profileIdTable(_$AppDatabase db) =>
+      db.profiles.createAlias('transactions__profile_id__profiles__id');
+
+  $$ProfilesTableProcessedTableManager? get profileId {
+    final $_column = $_itemColumn<String>('profile_id');
+    if ($_column == null) return null;
+    final manager = $$ProfilesTableTableManager(
+      $_db,
+      $_db.profiles,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_profileIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $CategoriesTable _categoryIdTable(_$AppDatabase db) =>
+      db.categories.createAlias('transactions__category_id__categories__id');
+
+  $$CategoriesTableProcessedTableManager? get categoryId {
+    final $_column = $_itemColumn<String>('category_id');
+    if ($_column == null) return null;
+    final manager = $$CategoriesTableTableManager(
+      $_db,
+      $_db.categories,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_categoryIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
 
   static MultiTypedResultKey<$RegretCheckinsTable, List<RegretCheckin>>
   _regretCheckinsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
@@ -2390,8 +2971,14 @@ class $$TransactionsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<double> get amount => $composableBuilder(
-    column: $table.amount,
+  ColumnWithTypeConverterFilters<TransactionType, TransactionType, String>
+  get transactionType => $composableBuilder(
+    column: $table.transactionType,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<int> get amountCents => $composableBuilder(
+    column: $table.amountCents,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2400,11 +2987,16 @@ class $$TransactionsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnWithTypeConverterFilters<MoodTag, MoodTag, int> get moodTag =>
+  ColumnWithTypeConverterFilters<MoodTag?, MoodTag, String> get moodTag =>
       $composableBuilder(
         column: $table.moodTag,
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
+
+  ColumnFilters<DateTime> get transactionDate => $composableBuilder(
+    column: $table.transactionDate,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
@@ -2415,6 +3007,52 @@ class $$TransactionsTableFilterComposer
     column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  $$ProfilesTableFilterComposer get profileId {
+    final $$ProfilesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.profileId,
+      referencedTable: $db.profiles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProfilesTableFilterComposer(
+            $db: $db,
+            $table: $db.profiles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CategoriesTableFilterComposer get categoryId {
+    final $$CategoriesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.categoryId,
+      referencedTable: $db.categories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoriesTableFilterComposer(
+            $db: $db,
+            $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 
   Expression<bool> regretCheckinsRefs(
     Expression<bool> Function($$RegretCheckinsTableFilterComposer f) f,
@@ -2456,8 +3094,13 @@ class $$TransactionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<double> get amount => $composableBuilder(
-    column: $table.amount,
+  ColumnOrderings<String> get transactionType => $composableBuilder(
+    column: $table.transactionType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amountCents => $composableBuilder(
+    column: $table.amountCents,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2466,8 +3109,13 @@ class $$TransactionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get moodTag => $composableBuilder(
+  ColumnOrderings<String> get moodTag => $composableBuilder(
     column: $table.moodTag,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get transactionDate => $composableBuilder(
+    column: $table.transactionDate,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2480,6 +3128,52 @@ class $$TransactionsTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  $$ProfilesTableOrderingComposer get profileId {
+    final $$ProfilesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.profileId,
+      referencedTable: $db.profiles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProfilesTableOrderingComposer(
+            $db: $db,
+            $table: $db.profiles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CategoriesTableOrderingComposer get categoryId {
+    final $$CategoriesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.categoryId,
+      referencedTable: $db.categories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoriesTableOrderingComposer(
+            $db: $db,
+            $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$TransactionsTableAnnotationComposer
@@ -2494,22 +3188,81 @@ class $$TransactionsTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<double> get amount =>
-      $composableBuilder(column: $table.amount, builder: (column) => column);
+  GeneratedColumnWithTypeConverter<TransactionType, String>
+  get transactionType => $composableBuilder(
+    column: $table.transactionType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get amountCents => $composableBuilder(
+    column: $table.amountCents,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get description => $composableBuilder(
     column: $table.description,
     builder: (column) => column,
   );
 
-  GeneratedColumnWithTypeConverter<MoodTag, int> get moodTag =>
+  GeneratedColumnWithTypeConverter<MoodTag?, String> get moodTag =>
       $composableBuilder(column: $table.moodTag, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get transactionDate => $composableBuilder(
+    column: $table.transactionDate,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$ProfilesTableAnnotationComposer get profileId {
+    final $$ProfilesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.profileId,
+      referencedTable: $db.profiles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProfilesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.profiles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CategoriesTableAnnotationComposer get categoryId {
+    final $$CategoriesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.categoryId,
+      referencedTable: $db.categories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoriesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 
   Expression<T> regretCheckinsRefs<T extends Object>(
     Expression<T> Function($$RegretCheckinsTableAnnotationComposer a) f,
@@ -2550,7 +3303,11 @@ class $$TransactionsTableTableManager
           $$TransactionsTableUpdateCompanionBuilder,
           (Transaction, $$TransactionsTableReferences),
           Transaction,
-          PrefetchHooks Function({bool regretCheckinsRefs})
+          PrefetchHooks Function({
+            bool profileId,
+            bool categoryId,
+            bool regretCheckinsRefs,
+          })
         > {
   $$TransactionsTableTableManager(_$AppDatabase db, $TransactionsTable table)
     : super(
@@ -2566,17 +3323,25 @@ class $$TransactionsTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
-                Value<double> amount = const Value.absent(),
-                Value<String> description = const Value.absent(),
-                Value<MoodTag> moodTag = const Value.absent(),
+                Value<String?> profileId = const Value.absent(),
+                Value<String?> categoryId = const Value.absent(),
+                Value<TransactionType> transactionType = const Value.absent(),
+                Value<int> amountCents = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<MoodTag?> moodTag = const Value.absent(),
+                Value<DateTime> transactionDate = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TransactionsCompanion(
                 id: id,
-                amount: amount,
+                profileId: profileId,
+                categoryId: categoryId,
+                transactionType: transactionType,
+                amountCents: amountCents,
                 description: description,
                 moodTag: moodTag,
+                transactionDate: transactionDate,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -2584,17 +3349,25 @@ class $$TransactionsTableTableManager
           createCompanionCallback:
               ({
                 required String id,
-                required double amount,
-                required String description,
-                required MoodTag moodTag,
+                Value<String?> profileId = const Value.absent(),
+                Value<String?> categoryId = const Value.absent(),
+                Value<TransactionType> transactionType = const Value.absent(),
+                required int amountCents,
+                Value<String?> description = const Value.absent(),
+                Value<MoodTag?> moodTag = const Value.absent(),
+                required DateTime transactionDate,
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TransactionsCompanion.insert(
                 id: id,
-                amount: amount,
+                profileId: profileId,
+                categoryId: categoryId,
+                transactionType: transactionType,
+                amountCents: amountCents,
                 description: description,
                 moodTag: moodTag,
+                transactionDate: transactionDate,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -2607,40 +3380,85 @@ class $$TransactionsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({regretCheckinsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (regretCheckinsRefs) db.regretCheckins,
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (regretCheckinsRefs)
-                    await $_getPrefetchedData<
-                      Transaction,
-                      $TransactionsTable,
-                      RegretCheckin
-                    >(
-                      currentTable: table,
-                      referencedTable: $$TransactionsTableReferences
-                          ._regretCheckinsRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$TransactionsTableReferences(
-                            db,
-                            table,
-                            p0,
-                          ).regretCheckinsRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where(
-                            (e) => e.transactionId == item.id,
-                          ),
-                      typedResults: items,
-                    ),
-                ];
+          prefetchHooksCallback:
+              ({
+                profileId = false,
+                categoryId = false,
+                regretCheckinsRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (regretCheckinsRefs) db.regretCheckins,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (profileId) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.profileId,
+                            referencedTable: $$TransactionsTableReferences
+                                ._profileIdTable(db),
+                            referencedColumn: $$TransactionsTableReferences
+                                ._profileIdTable(db)
+                                .id,
+                          ) as T;
+                        }
+                        if (categoryId) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.categoryId,
+                            referencedTable: $$TransactionsTableReferences
+                                ._categoryIdTable(db),
+                            referencedColumn: $$TransactionsTableReferences
+                                ._categoryIdTable(db)
+                                .id,
+                          ) as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (regretCheckinsRefs)
+                        await $_getPrefetchedData<
+                          Transaction,
+                          $TransactionsTable,
+                          RegretCheckin
+                        >(
+                          currentTable: table,
+                          referencedTable: $$TransactionsTableReferences
+                              ._regretCheckinsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$TransactionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).regretCheckinsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.transactionId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -2657,7 +3475,11 @@ typedef $$TransactionsTableProcessedTableManager =
       $$TransactionsTableUpdateCompanionBuilder,
       (Transaction, $$TransactionsTableReferences),
       Transaction,
-      PrefetchHooks Function({bool regretCheckinsRefs})
+      PrefetchHooks Function({
+        bool profileId,
+        bool categoryId,
+        bool regretCheckinsRefs,
+      })
     >;
 typedef $$RegretCheckinsTableCreateCompanionBuilder =
     RegretCheckinsCompanion Function({
