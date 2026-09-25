@@ -1,13 +1,35 @@
 import 'package:drift/drift.dart';
+
 import '../../transactions/data/transactions_table.dart';
+
+enum RegretResponse {
+  worthIt,
+  regret,
+  unsure,
+}
 
 class RegretCheckins extends Table {
   TextColumn get id => text()();
-  TextColumn get transactionId => text().references(Transactions, #id)();
-  DateTimeColumn get promptedAt => dateTime()();
+
+  TextColumn get transactionId => text().references(
+    Transactions,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
+
+  DateTimeColumn get dueAt => dateTime()();
+
+  DateTimeColumn get promptedAt => dateTime().nullable()();
+
   DateTimeColumn get answeredAt => dateTime().nullable()();
-  BoolColumn get wasWorthIt => boolean().nullable()();
-  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  TextColumn get response => textEnum<RegretResponse>().nullable()();
+
+  DateTimeColumn get createdAt =>
+      dateTime().withDefault(currentDateAndTime)();
+
+  DateTimeColumn get updatedAt =>
+      dateTime().withDefault(currentDateAndTime)();
 
   @override
   Set<Column> get primaryKey => {id};

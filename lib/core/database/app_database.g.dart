@@ -1581,8 +1581,17 @@ class $RegretCheckinsTable extends RegretCheckins
     type: DriftSqlType.string,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES transactions (id)',
+      'REFERENCES transactions (id) ON DELETE CASCADE',
     ),
+  );
+  static const VerificationMeta _dueAtMeta = const VerificationMeta('dueAt');
+  @override
+  late final GeneratedColumn<DateTime> dueAt = GeneratedColumn<DateTime>(
+    'due_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
   );
   static const VerificationMeta _promptedAtMeta = const VerificationMeta(
     'promptedAt',
@@ -1591,9 +1600,9 @@ class $RegretCheckinsTable extends RegretCheckins
   late final GeneratedColumn<DateTime> promptedAt = GeneratedColumn<DateTime>(
     'prompted_at',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _answeredAtMeta = const VerificationMeta(
     'answeredAt',
@@ -1606,19 +1615,26 @@ class $RegretCheckinsTable extends RegretCheckins
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _wasWorthItMeta = const VerificationMeta(
-    'wasWorthIt',
-  );
   @override
-  late final GeneratedColumn<bool> wasWorthIt = GeneratedColumn<bool>(
-    'was_worth_it',
+  late final GeneratedColumnWithTypeConverter<RegretResponse?, String>
+  response = GeneratedColumn<String>(
+    'response',
     aliasedName,
     true,
-    type: DriftSqlType.bool,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("was_worth_it" IN (0, 1))',
-    ),
+  ).withConverter<RegretResponse?>($RegretCheckinsTable.$converterresponsen);
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
   );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
@@ -1636,9 +1652,11 @@ class $RegretCheckinsTable extends RegretCheckins
   List<GeneratedColumn> get $columns => [
     id,
     transactionId,
+    dueAt,
     promptedAt,
     answeredAt,
-    wasWorthIt,
+    response,
+    createdAt,
     updatedAt,
   ];
   @override
@@ -1669,13 +1687,19 @@ class $RegretCheckinsTable extends RegretCheckins
     } else if (isInserting) {
       context.missing(_transactionIdMeta);
     }
+    if (data.containsKey('due_at')) {
+      context.handle(
+        _dueAtMeta,
+        dueAt.isAcceptableOrUnknown(data['due_at']!, _dueAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dueAtMeta);
+    }
     if (data.containsKey('prompted_at')) {
       context.handle(
         _promptedAtMeta,
         promptedAt.isAcceptableOrUnknown(data['prompted_at']!, _promptedAtMeta),
       );
-    } else if (isInserting) {
-      context.missing(_promptedAtMeta);
     }
     if (data.containsKey('answered_at')) {
       context.handle(
@@ -1683,13 +1707,10 @@ class $RegretCheckinsTable extends RegretCheckins
         answeredAt.isAcceptableOrUnknown(data['answered_at']!, _answeredAtMeta),
       );
     }
-    if (data.containsKey('was_worth_it')) {
+    if (data.containsKey('created_at')) {
       context.handle(
-        _wasWorthItMeta,
-        wasWorthIt.isAcceptableOrUnknown(
-          data['was_worth_it']!,
-          _wasWorthItMeta,
-        ),
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
     if (data.containsKey('updated_at')) {
@@ -1715,18 +1736,28 @@ class $RegretCheckinsTable extends RegretCheckins
         DriftSqlType.string,
         data['${effectivePrefix}transaction_id'],
       )!,
+      dueAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}due_at'],
+      )!,
       promptedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}prompted_at'],
-      )!,
+      ),
       answeredAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}answered_at'],
       ),
-      wasWorthIt: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}was_worth_it'],
+      response: $RegretCheckinsTable.$converterresponsen.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}response'],
+        ),
       ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -1738,21 +1769,30 @@ class $RegretCheckinsTable extends RegretCheckins
   $RegretCheckinsTable createAlias(String alias) {
     return $RegretCheckinsTable(attachedDatabase, alias);
   }
+
+  static JsonTypeConverter2<RegretResponse, String, String> $converterresponse =
+      const EnumNameConverter<RegretResponse>(RegretResponse.values);
+  static JsonTypeConverter2<RegretResponse?, String?, String?>
+  $converterresponsen = JsonTypeConverter2.asNullable($converterresponse);
 }
 
 class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
   final String id;
   final String transactionId;
-  final DateTime promptedAt;
+  final DateTime dueAt;
+  final DateTime? promptedAt;
   final DateTime? answeredAt;
-  final bool? wasWorthIt;
+  final RegretResponse? response;
+  final DateTime createdAt;
   final DateTime updatedAt;
   const RegretCheckin({
     required this.id,
     required this.transactionId,
-    required this.promptedAt,
+    required this.dueAt,
+    this.promptedAt,
     this.answeredAt,
-    this.wasWorthIt,
+    this.response,
+    required this.createdAt,
     required this.updatedAt,
   });
   @override
@@ -1760,13 +1800,19 @@ class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     map['transaction_id'] = Variable<String>(transactionId);
-    map['prompted_at'] = Variable<DateTime>(promptedAt);
+    map['due_at'] = Variable<DateTime>(dueAt);
+    if (!nullToAbsent || promptedAt != null) {
+      map['prompted_at'] = Variable<DateTime>(promptedAt);
+    }
     if (!nullToAbsent || answeredAt != null) {
       map['answered_at'] = Variable<DateTime>(answeredAt);
     }
-    if (!nullToAbsent || wasWorthIt != null) {
-      map['was_worth_it'] = Variable<bool>(wasWorthIt);
+    if (!nullToAbsent || response != null) {
+      map['response'] = Variable<String>(
+        $RegretCheckinsTable.$converterresponsen.toSql(response),
+      );
     }
+    map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
@@ -1775,13 +1821,17 @@ class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
     return RegretCheckinsCompanion(
       id: Value(id),
       transactionId: Value(transactionId),
-      promptedAt: Value(promptedAt),
+      dueAt: Value(dueAt),
+      promptedAt: promptedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(promptedAt),
       answeredAt: answeredAt == null && nullToAbsent
           ? const Value.absent()
           : Value(answeredAt),
-      wasWorthIt: wasWorthIt == null && nullToAbsent
+      response: response == null && nullToAbsent
           ? const Value.absent()
-          : Value(wasWorthIt),
+          : Value(response),
+      createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
   }
@@ -1794,9 +1844,13 @@ class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
     return RegretCheckin(
       id: serializer.fromJson<String>(json['id']),
       transactionId: serializer.fromJson<String>(json['transactionId']),
-      promptedAt: serializer.fromJson<DateTime>(json['promptedAt']),
+      dueAt: serializer.fromJson<DateTime>(json['dueAt']),
+      promptedAt: serializer.fromJson<DateTime?>(json['promptedAt']),
       answeredAt: serializer.fromJson<DateTime?>(json['answeredAt']),
-      wasWorthIt: serializer.fromJson<bool?>(json['wasWorthIt']),
+      response: $RegretCheckinsTable.$converterresponsen.fromJson(
+        serializer.fromJson<String?>(json['response']),
+      ),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -1806,9 +1860,13 @@ class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'transactionId': serializer.toJson<String>(transactionId),
-      'promptedAt': serializer.toJson<DateTime>(promptedAt),
+      'dueAt': serializer.toJson<DateTime>(dueAt),
+      'promptedAt': serializer.toJson<DateTime?>(promptedAt),
       'answeredAt': serializer.toJson<DateTime?>(answeredAt),
-      'wasWorthIt': serializer.toJson<bool?>(wasWorthIt),
+      'response': serializer.toJson<String?>(
+        $RegretCheckinsTable.$converterresponsen.toJson(response),
+      ),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -1816,16 +1874,20 @@ class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
   RegretCheckin copyWith({
     String? id,
     String? transactionId,
-    DateTime? promptedAt,
+    DateTime? dueAt,
+    Value<DateTime?> promptedAt = const Value.absent(),
     Value<DateTime?> answeredAt = const Value.absent(),
-    Value<bool?> wasWorthIt = const Value.absent(),
+    Value<RegretResponse?> response = const Value.absent(),
+    DateTime? createdAt,
     DateTime? updatedAt,
   }) => RegretCheckin(
     id: id ?? this.id,
     transactionId: transactionId ?? this.transactionId,
-    promptedAt: promptedAt ?? this.promptedAt,
+    dueAt: dueAt ?? this.dueAt,
+    promptedAt: promptedAt.present ? promptedAt.value : this.promptedAt,
     answeredAt: answeredAt.present ? answeredAt.value : this.answeredAt,
-    wasWorthIt: wasWorthIt.present ? wasWorthIt.value : this.wasWorthIt,
+    response: response.present ? response.value : this.response,
+    createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   RegretCheckin copyWithCompanion(RegretCheckinsCompanion data) {
@@ -1834,15 +1896,15 @@ class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
       transactionId: data.transactionId.present
           ? data.transactionId.value
           : this.transactionId,
+      dueAt: data.dueAt.present ? data.dueAt.value : this.dueAt,
       promptedAt: data.promptedAt.present
           ? data.promptedAt.value
           : this.promptedAt,
       answeredAt: data.answeredAt.present
           ? data.answeredAt.value
           : this.answeredAt,
-      wasWorthIt: data.wasWorthIt.present
-          ? data.wasWorthIt.value
-          : this.wasWorthIt,
+      response: data.response.present ? data.response.value : this.response,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -1852,9 +1914,11 @@ class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
     return (StringBuffer('RegretCheckin(')
           ..write('id: $id, ')
           ..write('transactionId: $transactionId, ')
+          ..write('dueAt: $dueAt, ')
           ..write('promptedAt: $promptedAt, ')
           ..write('answeredAt: $answeredAt, ')
-          ..write('wasWorthIt: $wasWorthIt, ')
+          ..write('response: $response, ')
+          ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -1864,9 +1928,11 @@ class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
   int get hashCode => Object.hash(
     id,
     transactionId,
+    dueAt,
     promptedAt,
     answeredAt,
-    wasWorthIt,
+    response,
+    createdAt,
     updatedAt,
   );
   @override
@@ -1875,55 +1941,67 @@ class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
       (other is RegretCheckin &&
           other.id == this.id &&
           other.transactionId == this.transactionId &&
+          other.dueAt == this.dueAt &&
           other.promptedAt == this.promptedAt &&
           other.answeredAt == this.answeredAt &&
-          other.wasWorthIt == this.wasWorthIt &&
+          other.response == this.response &&
+          other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
 
 class RegretCheckinsCompanion extends UpdateCompanion<RegretCheckin> {
   final Value<String> id;
   final Value<String> transactionId;
-  final Value<DateTime> promptedAt;
+  final Value<DateTime> dueAt;
+  final Value<DateTime?> promptedAt;
   final Value<DateTime?> answeredAt;
-  final Value<bool?> wasWorthIt;
+  final Value<RegretResponse?> response;
+  final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const RegretCheckinsCompanion({
     this.id = const Value.absent(),
     this.transactionId = const Value.absent(),
+    this.dueAt = const Value.absent(),
     this.promptedAt = const Value.absent(),
     this.answeredAt = const Value.absent(),
-    this.wasWorthIt = const Value.absent(),
+    this.response = const Value.absent(),
+    this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RegretCheckinsCompanion.insert({
     required String id,
     required String transactionId,
-    required DateTime promptedAt,
+    required DateTime dueAt,
+    this.promptedAt = const Value.absent(),
     this.answeredAt = const Value.absent(),
-    this.wasWorthIt = const Value.absent(),
+    this.response = const Value.absent(),
+    this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        transactionId = Value(transactionId),
-       promptedAt = Value(promptedAt);
+       dueAt = Value(dueAt);
   static Insertable<RegretCheckin> custom({
     Expression<String>? id,
     Expression<String>? transactionId,
+    Expression<DateTime>? dueAt,
     Expression<DateTime>? promptedAt,
     Expression<DateTime>? answeredAt,
-    Expression<bool>? wasWorthIt,
+    Expression<String>? response,
+    Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (transactionId != null) 'transaction_id': transactionId,
+      if (dueAt != null) 'due_at': dueAt,
       if (promptedAt != null) 'prompted_at': promptedAt,
       if (answeredAt != null) 'answered_at': answeredAt,
-      if (wasWorthIt != null) 'was_worth_it': wasWorthIt,
+      if (response != null) 'response': response,
+      if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -1932,18 +2010,22 @@ class RegretCheckinsCompanion extends UpdateCompanion<RegretCheckin> {
   RegretCheckinsCompanion copyWith({
     Value<String>? id,
     Value<String>? transactionId,
-    Value<DateTime>? promptedAt,
+    Value<DateTime>? dueAt,
+    Value<DateTime?>? promptedAt,
     Value<DateTime?>? answeredAt,
-    Value<bool?>? wasWorthIt,
+    Value<RegretResponse?>? response,
+    Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
     return RegretCheckinsCompanion(
       id: id ?? this.id,
       transactionId: transactionId ?? this.transactionId,
+      dueAt: dueAt ?? this.dueAt,
       promptedAt: promptedAt ?? this.promptedAt,
       answeredAt: answeredAt ?? this.answeredAt,
-      wasWorthIt: wasWorthIt ?? this.wasWorthIt,
+      response: response ?? this.response,
+      createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -1958,14 +2040,22 @@ class RegretCheckinsCompanion extends UpdateCompanion<RegretCheckin> {
     if (transactionId.present) {
       map['transaction_id'] = Variable<String>(transactionId.value);
     }
+    if (dueAt.present) {
+      map['due_at'] = Variable<DateTime>(dueAt.value);
+    }
     if (promptedAt.present) {
       map['prompted_at'] = Variable<DateTime>(promptedAt.value);
     }
     if (answeredAt.present) {
       map['answered_at'] = Variable<DateTime>(answeredAt.value);
     }
-    if (wasWorthIt.present) {
-      map['was_worth_it'] = Variable<bool>(wasWorthIt.value);
+    if (response.present) {
+      map['response'] = Variable<String>(
+        $RegretCheckinsTable.$converterresponsen.toSql(response.value),
+      );
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
     }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
@@ -1981,9 +2071,11 @@ class RegretCheckinsCompanion extends UpdateCompanion<RegretCheckin> {
     return (StringBuffer('RegretCheckinsCompanion(')
           ..write('id: $id, ')
           ..write('transactionId: $transactionId, ')
+          ..write('dueAt: $dueAt, ')
           ..write('promptedAt: $promptedAt, ')
           ..write('answeredAt: $answeredAt, ')
-          ..write('wasWorthIt: $wasWorthIt, ')
+          ..write('response: $response, ')
+          ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -2023,6 +2115,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('transactions', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'transactions',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('regret_checkins', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -3485,9 +3584,11 @@ typedef $$RegretCheckinsTableCreateCompanionBuilder =
     RegretCheckinsCompanion Function({
       required String id,
       required String transactionId,
-      required DateTime promptedAt,
+      required DateTime dueAt,
+      Value<DateTime?> promptedAt,
       Value<DateTime?> answeredAt,
-      Value<bool?> wasWorthIt,
+      Value<RegretResponse?> response,
+      Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -3495,9 +3596,11 @@ typedef $$RegretCheckinsTableUpdateCompanionBuilder =
     RegretCheckinsCompanion Function({
       Value<String> id,
       Value<String> transactionId,
-      Value<DateTime> promptedAt,
+      Value<DateTime> dueAt,
+      Value<DateTime?> promptedAt,
       Value<DateTime?> answeredAt,
-      Value<bool?> wasWorthIt,
+      Value<RegretResponse?> response,
+      Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -3543,6 +3646,11 @@ class $$RegretCheckinsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<DateTime> get dueAt => $composableBuilder(
+    column: $table.dueAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<DateTime> get promptedAt => $composableBuilder(
     column: $table.promptedAt,
     builder: (column) => ColumnFilters(column),
@@ -3553,8 +3661,14 @@ class $$RegretCheckinsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<bool> get wasWorthIt => $composableBuilder(
-    column: $table.wasWorthIt,
+  ColumnWithTypeConverterFilters<RegretResponse?, RegretResponse, String>
+  get response => $composableBuilder(
+    column: $table.response,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3601,6 +3715,11 @@ class $$RegretCheckinsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get dueAt => $composableBuilder(
+    column: $table.dueAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get promptedAt => $composableBuilder(
     column: $table.promptedAt,
     builder: (column) => ColumnOrderings(column),
@@ -3611,8 +3730,13 @@ class $$RegretCheckinsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<bool> get wasWorthIt => $composableBuilder(
-    column: $table.wasWorthIt,
+  ColumnOrderings<String> get response => $composableBuilder(
+    column: $table.response,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -3657,6 +3781,9 @@ class $$RegretCheckinsTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
+  GeneratedColumn<DateTime> get dueAt =>
+      $composableBuilder(column: $table.dueAt, builder: (column) => column);
+
   GeneratedColumn<DateTime> get promptedAt => $composableBuilder(
     column: $table.promptedAt,
     builder: (column) => column,
@@ -3667,10 +3794,11 @@ class $$RegretCheckinsTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<bool> get wasWorthIt => $composableBuilder(
-    column: $table.wasWorthIt,
-    builder: (column) => column,
-  );
+  GeneratedColumnWithTypeConverter<RegretResponse?, String> get response =>
+      $composableBuilder(column: $table.response, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
@@ -3731,17 +3859,21 @@ class $$RegretCheckinsTableTableManager
               ({
                 Value<String> id = const Value.absent(),
                 Value<String> transactionId = const Value.absent(),
-                Value<DateTime> promptedAt = const Value.absent(),
+                Value<DateTime> dueAt = const Value.absent(),
+                Value<DateTime?> promptedAt = const Value.absent(),
                 Value<DateTime?> answeredAt = const Value.absent(),
-                Value<bool?> wasWorthIt = const Value.absent(),
+                Value<RegretResponse?> response = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RegretCheckinsCompanion(
                 id: id,
                 transactionId: transactionId,
+                dueAt: dueAt,
                 promptedAt: promptedAt,
                 answeredAt: answeredAt,
-                wasWorthIt: wasWorthIt,
+                response: response,
+                createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -3749,17 +3881,21 @@ class $$RegretCheckinsTableTableManager
               ({
                 required String id,
                 required String transactionId,
-                required DateTime promptedAt,
+                required DateTime dueAt,
+                Value<DateTime?> promptedAt = const Value.absent(),
                 Value<DateTime?> answeredAt = const Value.absent(),
-                Value<bool?> wasWorthIt = const Value.absent(),
+                Value<RegretResponse?> response = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RegretCheckinsCompanion.insert(
                 id: id,
                 transactionId: transactionId,
+                dueAt: dueAt,
                 promptedAt: promptedAt,
                 answeredAt: answeredAt,
-                wasWorthIt: wasWorthIt,
+                response: response,
+                createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),

@@ -19,7 +19,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration {
@@ -56,24 +56,24 @@ class AppDatabase extends _$AppDatabase {
       // ------------------------------------------------------------
       from3To4: (m, schema) async {
         // Categories in V3 did not contain updated_at.
-        // Because the new column has a database default,
-        // existing rows can receive a valid timestamp automatically.
         await m.addColumn(schema.categories, schema.categories.updatedAt);
 
+        // Rebuild Transactions and preserve existing data.
         await m.alterTable(
           TableMigration(
             schema.transactions,
-
             columnTransformer: {
-              // $19.99 -> 1999
+              // Example:
+              // 19.99 -> 1999 cents
               schema.transactions.amountCents: const CustomExpression<int>(
                 'CAST(ROUND("amount" * 100.0) AS INTEGER)',
               ),
 
-              // Every transaction in V3 represented an expense.
+              // All V3 transactions represented expenses.
               schema.transactions.transactionType: const Constant('expense'),
 
-              // Convert the old integer enum into stable text values.
+              // Convert the old integer MoodTag enum into
+              // stable persisted text values.
               schema.transactions.moodTag: const CustomExpression<String>('''
 CASE "mood_tag"
   WHEN 0 THEN 'need'
@@ -86,15 +86,15 @@ CASE "mood_tag"
 END
 '''),
 
-              // Before V4 there was no separate transaction date.
-              // created_at is the best truthful historical value.
+              // V3 did not have a separate transaction date.
+              // created_at is the closest truthful historical value.
               schema.transactions.transactionDate: const CustomExpression<int>(
                 '"created_at"',
               ),
             },
 
-            // These genuinely new nullable columns don't need data
-            // transformations for historical rows.
+            // These fields did not exist in V3.
+            // They are nullable, so legacy rows receive NULL.
             newColumns: [
               schema.transactions.profileId,
               schema.transactions.categoryId,
@@ -102,21 +102,79 @@ END
           ),
         );
       },
+
+      // ------------------------------------------------------------
+      // V4 -> V5
+      //
+      // RegretCheckins redesign:
+      //
+      // + due_at
+      // prompted_at becomes nullable
+      // was_worth_it BOOLEAN -> response TEXT
+      // + created_at
+      //
+      // Also updates the transaction foreign key behavior.
+      // ------------------------------------------------------------
+      from4To5: (m, schema) async {
+        await m.alterTable(
+          TableMigration(
+            schema.regretCheckins,
+            columnTransformer: {
+              // In V4 a regret check-in only existed once the user
+              // had been prompted.
+              //
+              // Therefore the historical prompted_at timestamp is
+              // the best available value for due_at.
+              schema.regretCheckins.dueAt: const CustomExpression<int>(
+                '"prompted_at"',
+              ),
+
+              // Convert the old nullable boolean response:
+              //
+              // 1    -> worthIt
+              // 0    -> regret
+              // NULL -> NULL
+              schema.regretCheckins.response: const CustomExpression<String>('''
+CASE "was_worth_it"
+  WHEN 1 THEN 'worthIt'
+  WHEN 0 THEN 'regret'
+  ELSE NULL
+END
+'''),
+
+              // V4 did not store created_at.
+              // prompted_at is the closest historical timestamp.
+              schema.regretCheckins.createdAt: const CustomExpression<int>(
+                '"prompted_at"',
+              ),
+            },
+          ),
+        );
+      },
     );
 
     return MigrationStrategy(
+      // ------------------------------------------------------------
+      // Fresh database
+      // ------------------------------------------------------------
       onCreate: (Migrator m) async {
         await m.createAll();
       },
 
+      // ------------------------------------------------------------
+      // Existing database upgrade
+      // ------------------------------------------------------------
       onUpgrade: (Migrator m, int from, int to) async {
-        // We wrap Drift's generated step-by-step upgrade so that
-        // table reconstruction can occur safely around foreign keys.
+        // TableMigration may rebuild tables.
+        // Foreign-key enforcement is temporarily disabled while the
+        // migration runs and validated afterwards.
         await customStatement('PRAGMA foreign_keys = OFF');
 
         try {
           await upgrade(m, from, to);
 
+          // Make sure the migration did not leave any broken
+          // foreign-key relationships.
           final foreignKeyErrors = await customSelect(
             'PRAGMA foreign_key_check',
           ).get();
@@ -132,6 +190,9 @@ END
         }
       },
 
+      // ------------------------------------------------------------
+      // Every database open
+      // ------------------------------------------------------------
       beforeOpen: (details) async {
         await customStatement('PRAGMA foreign_keys = ON');
       },
