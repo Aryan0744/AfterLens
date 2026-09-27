@@ -10,6 +10,7 @@ import '../../features/mood_engine/data/regret_checkins_table.dart';
 import '../../features/profile/data/profiles_table.dart';
 import '../../features/transactions/data/transactions_table.dart';
 import '../../features/transactions/domain/transaction_types.dart';
+import '../../features/mood_engine/domain/regret_response.dart';
 
 import 'app_database.steps.dart';
 
