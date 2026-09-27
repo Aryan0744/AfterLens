@@ -9,6 +9,7 @@ import '../../features/categories/data/categories_table.dart';
 import '../../features/mood_engine/data/regret_checkins_table.dart';
 import '../../features/profile/data/profiles_table.dart';
 import '../../features/transactions/data/transactions_table.dart';
+import '../../features/transactions/domain/transaction_types.dart';
 
 import 'app_database.steps.dart';
 

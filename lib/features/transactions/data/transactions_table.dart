@@ -2,20 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../categories/data/categories_table.dart';
 import '../../profile/data/profiles_table.dart';
-
-enum MoodTag {
-  need,
-  want,
-  impulse,
-  social,
-  subscription,
-  emergency,
-}
-
-enum TransactionType {
-  expense,
-  income,
-}
+import '../domain/transaction_types.dart';
 
 class Transactions extends Table {
   /// Unique identifier for the transaction.
@@ -27,9 +14,7 @@ class Transactions extends Table {
   ///
   /// Temporarily nullable so existing V3 transactions can be migrated
   /// safely. New V1 application logic will require a profile.
-  TextColumn get profileId => text()
-      .nullable()
-      .references(
+  TextColumn get profileId => text().nullable().references(
     Profiles,
     #id,
     onDelete: KeyAction.cascade,
@@ -38,9 +23,7 @@ class Transactions extends Table {
   /// Spending category associated with this transaction.
   ///
   /// Temporarily nullable for legacy V3 rows.
-  TextColumn get categoryId => text()
-      .nullable()
-      .references(
+  TextColumn get categoryId => text().nullable().references(
     Categories,
     #id,
     onDelete: KeyAction.restrict,
@@ -49,10 +32,9 @@ class Transactions extends Table {
   /// Whether this record represents money coming in or going out.
   ///
   /// Stored as text ("expense" / "income") instead of an enum index.
-  TextColumn get transactionType =>
-      textEnum<TransactionType>().withDefault(
-        Constant(TransactionType.expense.name),
-      )();
+  TextColumn get transactionType => textEnum<TransactionType>().withDefault(
+    Constant(TransactionType.expense.name),
+  )();
 
   /// Monetary amount stored in minor currency units.
   ///
@@ -74,12 +56,10 @@ class Transactions extends Table {
   DateTimeColumn get transactionDate => dateTime()();
 
   /// When this record was created inside AfterLens.
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
   /// When this record was last modified.
-  DateTimeColumn get updatedAt =>
-      dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
   Set<Column> get primaryKey => {id};
