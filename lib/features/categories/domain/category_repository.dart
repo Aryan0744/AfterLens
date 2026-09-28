@@ -12,6 +12,12 @@ abstract class CategoryRepository {
     required String name,
   });
 
+  Future<AppCategory> ensureSystemCategory({
+    required String profileId,
+    required String systemKey,
+    required String name,
+  });
+
   Future<void> archiveCategory({
     required String profileId,
     required String categoryId,

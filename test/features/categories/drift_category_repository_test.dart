@@ -48,6 +48,58 @@ void main() {
       expect(stored!.name, 'Dining');
     });
 
+    test('creates a system category with stable system key', () async {
+      final profile = await profileRepository.createLocalProfile(
+        currencyCode: 'CAD',
+      );
+
+      final category = await categoryRepository.ensureSystemCategory(
+        profileId: profile.id,
+        systemKey: 'dining',
+        name: 'Dining',
+      );
+
+      expect(category.id, isNotEmpty);
+      expect(category.profileId, profile.id);
+      expect(category.name, 'Dining');
+      expect(category.systemKey, 'dining');
+      expect(category.isSystem, true);
+      expect(category.isArchived, false);
+    });
+
+    test(
+      'ensuring the same system category twice does not duplicate it',
+          () async {
+        final profile = await profileRepository.createLocalProfile(
+          currencyCode: 'CAD',
+        );
+
+        final first = await categoryRepository.ensureSystemCategory(
+          profileId: profile.id,
+          systemKey: 'groceries',
+          name: 'Groceries',
+        );
+
+        final second = await categoryRepository.ensureSystemCategory(
+          profileId: profile.id,
+          systemKey: 'groceries',
+          name: 'Groceries',
+        );
+
+        expect(second.id, first.id);
+
+        final categories = await categoryRepository.getActiveCategories(
+          profileId: profile.id,
+        );
+
+        final groceries = categories.where(
+              (category) => category.systemKey == 'groceries',
+        );
+
+        expect(groceries, hasLength(1));
+      },
+    );
+
     test('rejects empty category names', () async {
       final profile = await profileRepository.createLocalProfile(
         currencyCode: 'CAD',
@@ -105,6 +157,32 @@ void main() {
           name: 'Dining',
         ),
         throwsA(isA<StateError>()),
+      );
+    });
+
+    test('cannot create system category for missing profile', () async {
+      expect(
+            () => categoryRepository.ensureSystemCategory(
+          profileId: 'missing-profile',
+          systemKey: 'dining',
+          name: 'Dining',
+        ),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('rejects invalid system key', () async {
+      final profile = await profileRepository.createLocalProfile(
+        currencyCode: 'CAD',
+      );
+
+      expect(
+            () => categoryRepository.ensureSystemCategory(
+          profileId: profile.id,
+          systemKey: 'Dining Food',
+          name: 'Dining',
+        ),
+        throwsA(isA<ArgumentError>()),
       );
     });
 

@@ -105,6 +105,75 @@ class DriftCategoryRepository implements CategoryRepository {
   }
 
   @override
+  Future<AppCategory> ensureSystemCategory({
+    required String profileId,
+    required String systemKey,
+    required String name,
+  }) async {
+    await _ensureProfileExists(profileId);
+
+    final normalizedName = _normalizeName(name);
+    final normalizedSystemKey = systemKey.trim().toLowerCase();
+
+    if (normalizedSystemKey.isEmpty) {
+      throw ArgumentError.value(
+        systemKey,
+        'systemKey',
+        'System key cannot be empty.',
+      );
+    }
+
+    if (!RegExp(r'^[a-z0-9_]+$').hasMatch(normalizedSystemKey)) {
+      throw ArgumentError.value(
+        systemKey,
+        'systemKey',
+        'System key may contain only lowercase letters, '
+            'numbers, and underscores.',
+      );
+    }
+
+    final existing =
+        await (_database.select(_database.categories)..where(
+              (category) =>
+                  category.profileId.equals(profileId) &
+                  category.systemKey.equals(normalizedSystemKey),
+            ))
+            .getSingleOrNull();
+
+    // Bootstrap can safely run every time the app starts.
+    // Reuse the existing system category rather than creating duplicates.
+    if (existing != null) {
+      return _mapCategory(existing);
+    }
+
+    final id = _uuid.v4();
+    final now = DateTime.now();
+
+    await _database
+        .into(_database.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            id: id,
+            profileId: profileId,
+            name: normalizedName,
+            systemKey: Value(normalizedSystemKey),
+            createdAt: Value(now),
+            updatedAt: Value(now),
+          ),
+        );
+
+    return AppCategory(
+      id: id,
+      profileId: profileId,
+      name: normalizedName,
+      systemKey: normalizedSystemKey,
+      isArchived: false,
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
+
+  @override
   Future<void> archiveCategory({
     required String profileId,
     required String categoryId,
