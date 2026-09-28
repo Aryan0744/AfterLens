@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/bootstrap/application/app_bootstrap_service.dart';
 import '../../features/categories/data/drift_category_repository.dart';
 import '../../features/categories/domain/category_repository.dart';
 import '../../features/mood_engine/application/regret_scheduling_service.dart';
@@ -10,7 +11,6 @@ import '../../features/profile/data/drift_profile_repository.dart';
 import '../../features/profile/domain/profile_repository.dart';
 import '../../features/transactions/data/drift_transaction_repository.dart';
 import '../../features/transactions/domain/transaction_repository.dart';
-
 import '../database/database_provider.dart';
 
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
@@ -55,5 +55,16 @@ final regretSchedulingServiceProvider = Provider<RegretSchedulingService>((
   return RegretSchedulingService(
     eligibilityPolicy: eligibilityPolicy,
     checkinRepository: checkinRepository,
+  );
+});
+
+final appBootstrapServiceProvider = Provider<AppBootstrapService>((ref) {
+  final profileRepository = ref.watch(profileRepositoryProvider);
+
+  final categoryRepository = ref.watch(categoryRepositoryProvider);
+
+  return AppBootstrapService(
+    profileRepository: profileRepository,
+    categoryRepository: categoryRepository,
   );
 });
