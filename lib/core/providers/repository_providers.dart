@@ -4,6 +4,7 @@ import '../../features/bootstrap/application/app_bootstrap_service.dart';
 import '../../features/categories/data/drift_category_repository.dart';
 import '../../features/categories/domain/category_repository.dart';
 import '../../features/mood_engine/application/regret_scheduling_service.dart';
+import '../../features/mood_engine/application/regret_prompt_service.dart';
 import '../../features/mood_engine/data/drift_regret_checkin_repository.dart';
 import '../../features/mood_engine/domain/regret_checkin_repository.dart';
 import '../../features/mood_engine/domain/regret_eligibility_policy.dart';
@@ -66,5 +67,13 @@ final appBootstrapServiceProvider = Provider<AppBootstrapService>((ref) {
   return AppBootstrapService(
     profileRepository: profileRepository,
     categoryRepository: categoryRepository,
+  );
+});
+
+final regretPromptServiceProvider = Provider<RegretPromptService>((ref) {
+  return RegretPromptService(
+    checkinRepository: ref.watch(regretCheckinRepositoryProvider),
+    transactionRepository: ref.watch(transactionRepositoryProvider),
+    runInTransaction: ref.watch(appDatabaseProvider).transaction,
   );
 });
