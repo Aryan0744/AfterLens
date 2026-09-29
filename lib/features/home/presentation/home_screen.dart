@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/branding/afterlens_logo.dart';
+import '../../mood_engine/application/regret_prompt_result.dart';
+import '../../mood_engine/presentation/regret_checkin_screen.dart';
+import '../../mood_engine/presentation/regret_prompt_card.dart';
+import '../../mood_engine/presentation/regret_prompt_controller.dart';
 import '../../profile/domain/app_profile.dart';
 import '../../transactions/domain/app_transaction.dart';
 import '../../transactions/domain/transaction_types.dart';
@@ -21,6 +25,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final transactionsState = ref.watch(transactionsProvider(profile.id));
+    final promptState = ref.watch(regretPromptControllerProvider(profile.id));
 
     return Scaffold(
       appBar: AppBar(title: const AfterLensLogo(width: 130)),
@@ -28,10 +33,12 @@ class HomeScreen extends ConsumerWidget {
         child: RefreshIndicator(
           onRefresh: () async {
             ref.invalidate(transactionsProvider(profile.id));
+            ref.invalidate(regretPromptControllerProvider(profile.id));
 
             await ref.read(transactionsProvider(profile.id).future);
           },
           child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(24),
             children: [
               Text(
@@ -55,6 +62,23 @@ class HomeScreen extends ConsumerWidget {
               ),
 
               const SizedBox(height: 24),
+
+              promptState.when(
+                loading: () => const SizedBox.shrink(),
+                error: (error, stackTrace) => const SizedBox.shrink(),
+                data: (result) {
+                  final prompt = result.prompt;
+                  if (prompt == null) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: RegretPromptCard(
+                      prompt: prompt,
+                      currencyCode: profile.currencyCode,
+                      onReflect: () => _openReflection(context, ref, prompt),
+                    ),
+                  );
+                },
+              ),
 
               SizedBox(
                 width: double.infinity,
@@ -124,6 +148,26 @@ class HomeScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _openReflection(
+    BuildContext context,
+    WidgetRef ref,
+    RegretPrompt prompt,
+  ) async {
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) =>
+            RegretCheckinScreen(profile: profile, prompt: prompt),
+      ),
+    );
+    if (!context.mounted) return;
+    ref.invalidate(regretPromptControllerProvider(profile.id));
+    if (saved == true) {
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(const SnackBar(content: Text('Reflection saved.')));
+    }
   }
 
   Future<void> _openExpenseEntry(BuildContext context) async {
