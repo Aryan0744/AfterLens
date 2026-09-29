@@ -2,7 +2,6 @@ import 'package:afterlens/core/branding/afterlens_logo.dart';
 import 'package:afterlens/core/branding/brand_assets.dart';
 import 'package:afterlens/core/theme/app_theme.dart';
 import 'package:afterlens/core/theme/brand_colors.dart';
-import 'package:afterlens/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -10,13 +9,17 @@ import 'package:flutter_test/flutter_test.dart';
 
 String renderedAsset(WidgetTester tester) {
   final picture = tester.widget<SvgPicture>(find.byType(SvgPicture));
+
   return (picture.bytesLoader as SvgAssetLoader).assetName;
 }
 
 double contrast(Color first, Color second) {
-  final a = first.computeLuminance();
-  final b = second.computeLuminance();
-  return a > b ? (a + 0.05) / (b + 0.05) : (b + 0.05) / (a + 0.05);
+  final firstLuminance = first.computeLuminance();
+  final secondLuminance = second.computeLuminance();
+
+  return firstLuminance > secondLuminance
+      ? (firstLuminance + 0.05) / (secondLuminance + 0.05)
+      : (secondLuminance + 0.05) / (firstLuminance + 0.05);
 }
 
 void main() {
@@ -39,15 +42,21 @@ void main() {
         BrandAssets.markNavy,
         BrandAssets.markWhite,
       ];
+
       for (final asset in assets) {
         final source = await rootBundle.loadString(asset);
+
         expect(source, isNot(contains('<text')), reason: asset);
+
         final decoded = await vg.loadPicture(SvgAssetLoader(asset), null);
+
         expect(decoded.size.isEmpty, isFalse, reason: asset);
+
         decoded.picture.dispose();
       }
 
       final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+
       expect(
         manifest.listAssets().where(
           (path) =>
@@ -59,16 +68,30 @@ void main() {
     },
   );
 
-  testWidgets('preview follows system light/dark changes and is labelled', (
+  testWidgets('logo follows system light and dark changes and is labelled', (
     tester,
   ) async {
     addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
 
     tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
-    await tester.pumpWidget(const AfterLensApp());
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: ThemeMode.system,
+        home: const Scaffold(body: Center(child: AfterLensLogo(width: 240))),
+      ),
+    );
+
     await tester.pumpAndSettle();
+
+    expect(find.byType(AfterLensLogo), findsOneWidget);
+
     expect(renderedAsset(tester), BrandAssets.primaryLight);
+
     expect(find.bySemanticsLabel('AfterLens logo'), findsOneWidget);
+
     expect(
       Theme.of(tester.element(find.byType(AfterLensLogo)))
           .scaffoldBackgroundColor,
@@ -76,13 +99,19 @@ void main() {
     );
 
     tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+
     await tester.pumpAndSettle();
+
+    expect(find.byType(AfterLensLogo), findsOneWidget);
+
     expect(renderedAsset(tester), BrandAssets.primaryDark);
+
     expect(
       Theme.of(tester.element(find.byType(AfterLensLogo)))
           .scaffoldBackgroundColor,
       BrandColors.deepNavy,
     );
+
     expect(tester.takeException(), isNull);
   });
 
@@ -101,6 +130,7 @@ void main() {
     ],
     AfterLensLogoType.mark: [BrandAssets.markLight, BrandAssets.markDark],
   };
+
   for (final entry in variants.entries) {
     testWidgets('${entry.key.name} respects explicit contrasting surfaces', (
       tester,
@@ -125,8 +155,11 @@ void main() {
             ),
           ),
         );
+
         await tester.pumpAndSettle();
+
         expect(renderedAsset(tester), entry.value[darkSurface ? 1 : 0]);
+
         expect(tester.takeException(), isNull);
       }
     });
@@ -135,18 +168,22 @@ void main() {
   test('theme text and filled controls meet normal-text contrast', () {
     for (final theme in [AppTheme.light, AppTheme.dark]) {
       final scheme = theme.colorScheme;
+
       expect(
         contrast(scheme.onSurface, scheme.surface),
         greaterThanOrEqualTo(4.5),
       );
+
       expect(
         contrast(scheme.onPrimary, scheme.primary),
         greaterThanOrEqualTo(4.5),
       );
+
       expect(
         contrast(scheme.onSecondary, scheme.secondary),
         greaterThanOrEqualTo(4.5),
       );
+
       for (final style in [
         theme.textButtonTheme.style!,
         theme.outlinedButtonTheme.style!,

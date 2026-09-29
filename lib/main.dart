@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'core/branding/afterlens_logo.dart';
 import 'core/theme/app_theme.dart';
+import 'features/bootstrap/presentation/app_bootstrap_gate.dart';
 
 void main() {
   runApp(const ProviderScope(child: AfterLensApp()));
@@ -19,25 +19,7 @@ class AfterLensApp extends StatelessWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system,
-      home: const BrandPreviewScreen(),
-    );
-  }
-}
-
-class BrandPreviewScreen extends StatelessWidget {
-  const BrandPreviewScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.all(32),
-            child: AfterLensLogo(width: 240),
-          ),
-        ),
-      ),
+      home: const AppBootstrapGate(),
     );
   }
 }
