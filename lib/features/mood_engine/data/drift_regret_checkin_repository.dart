@@ -168,6 +168,83 @@ class DriftRegretCheckinRepository implements RegretCheckinRepository {
   }
 
   @override
+  Future<void> rescheduleUnpromptedCheckin({
+    required String checkinId,
+    required DateTime dueAt,
+  }) async {
+    final checkin = await getCheckinById(checkinId: checkinId);
+
+    if (checkin == null) {
+      throw StateError('Regret check-in $checkinId does not exist.');
+    }
+
+    if (checkin.promptedAt != null ||
+        checkin.answeredAt != null ||
+        checkin.response != null) {
+      throw StateError(
+        'Only an unprompted regret check-in can be rescheduled.',
+      );
+    }
+
+    final transaction =
+        await (_database.select(_database.transactions)..where(
+              (transaction) => transaction.id.equals(checkin.transactionId),
+            ))
+            .getSingleOrNull();
+
+    if (transaction == null) {
+      throw StateError('Transaction ${checkin.transactionId} does not exist.');
+    }
+
+    if (!dueAt.isAfter(transaction.transactionDate)) {
+      throw ArgumentError.value(
+        dueAt,
+        'dueAt',
+        'Check-in due time must be after the transaction date.',
+      );
+    }
+
+    final affectedRows =
+        await (_database.update(_database.regretCheckins)..where(
+              (row) =>
+                  row.id.equals(checkinId) &
+                  row.promptedAt.isNull() &
+                  row.answeredAt.isNull() &
+                  row.response.isNull(),
+            ))
+            .write(
+              RegretCheckinsCompanion(
+                dueAt: Value(dueAt),
+                updatedAt: Value(DateTime.now()),
+              ),
+            );
+
+    if (affectedRows != 1) {
+      throw StateError('Regret check-in $checkinId could not be rescheduled.');
+    }
+  }
+
+  @override
+  Future<void> deleteUnpromptedCheckin({required String checkinId}) async {
+    final affectedRows =
+        await (_database.delete(_database.regretCheckins)..where(
+              (row) =>
+                  row.id.equals(checkinId) &
+                  row.promptedAt.isNull() &
+                  row.answeredAt.isNull() &
+                  row.response.isNull(),
+            ))
+            .go();
+
+    if (affectedRows != 1) {
+      throw StateError(
+        'Only an existing unprompted regret check-in '
+        'can be deleted.',
+      );
+    }
+  }
+
+  @override
   Future<void> markPrompted({
     required String checkinId,
     required DateTime promptedAt,

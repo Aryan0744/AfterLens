@@ -13,7 +13,6 @@ abstract class RegretCheckinRepository {
     required DateTime asOf,
   });
 
-  /// All deliveries on the local calendar date, including answered check-ins.
   Future<List<AppRegretCheckin>> getCheckinsPromptedOnDate({
     required String profileId,
     required DateTime date,
@@ -23,6 +22,13 @@ abstract class RegretCheckinRepository {
     required String transactionId,
     required DateTime dueAt,
   });
+
+  Future<void> rescheduleUnpromptedCheckin({
+    required String checkinId,
+    required DateTime dueAt,
+  });
+
+  Future<void> deleteUnpromptedCheckin({required String checkinId});
 
   Future<void> markPrompted({
     required String checkinId,

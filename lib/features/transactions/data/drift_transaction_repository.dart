@@ -105,6 +105,76 @@ class DriftTransactionRepository implements TransactionRepository {
   }
 
   @override
+  Future<AppTransaction> updateExpense({
+    required String profileId,
+    required String transactionId,
+    required String categoryId,
+    required int amountCents,
+    required MoodTag moodTag,
+    required DateTime transactionDate,
+    String? description,
+  }) async {
+    _validateAmount(amountCents);
+
+    final normalizedDescription = _normalizeDescription(description);
+
+    await _ensureUsableCategory(profileId: profileId, categoryId: categoryId);
+
+    final existing = await getTransactionById(transactionId: transactionId);
+
+    if (existing == null) {
+      throw StateError('Transaction $transactionId does not exist.');
+    }
+
+    if (existing.profileId != profileId) {
+      throw StateError(
+        'Transaction $transactionId does not belong '
+        'to profile $profileId.',
+      );
+    }
+
+    if (!existing.isExpense) {
+      throw StateError('Transaction $transactionId is not an expense.');
+    }
+
+    final now = DateTime.now();
+
+    final affectedRows =
+        await (_database.update(_database.transactions)..where(
+              (transaction) =>
+                  transaction.id.equals(transactionId) &
+                  transaction.profileId.equals(profileId),
+            ))
+            .write(
+              TransactionsCompanion(
+                categoryId: Value(categoryId),
+                amountCents: Value(amountCents),
+                description: Value(normalizedDescription),
+                moodTag: Value(moodTag),
+                transactionDate: Value(transactionDate),
+                updatedAt: Value(now),
+              ),
+            );
+
+    if (affectedRows != 1) {
+      throw StateError('Transaction $transactionId could not be updated.');
+    }
+
+    return AppTransaction(
+      id: existing.id,
+      profileId: existing.profileId,
+      categoryId: categoryId,
+      type: existing.type,
+      amountCents: amountCents,
+      description: normalizedDescription,
+      moodTag: moodTag,
+      transactionDate: transactionDate,
+      createdAt: existing.createdAt,
+      updatedAt: now,
+    );
+  }
+
+  @override
   Future<AppTransaction> createIncome({
     required String profileId,
     required int amountCents,

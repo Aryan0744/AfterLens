@@ -17,6 +17,16 @@ abstract class TransactionRepository {
     String? description,
   });
 
+  Future<AppTransaction> updateExpense({
+    required String profileId,
+    required String transactionId,
+    required String categoryId,
+    required int amountCents,
+    required MoodTag moodTag,
+    required DateTime transactionDate,
+    String? description,
+  });
+
   Future<AppTransaction> createIncome({
     required String profileId,
     required int amountCents,
