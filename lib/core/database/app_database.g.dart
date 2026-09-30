@@ -1624,6 +1624,69 @@ class $RegretCheckinsTable extends RegretCheckins
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   ).withConverter<RegretResponse?>($RegretCheckinsTable.$converterresponsen);
+  static const VerificationMeta _snapshotAmountCentsMeta =
+      const VerificationMeta('snapshotAmountCents');
+  @override
+  late final GeneratedColumn<int> snapshotAmountCents = GeneratedColumn<int>(
+    'snapshot_amount_cents',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _snapshotCategoryIdMeta =
+      const VerificationMeta('snapshotCategoryId');
+  @override
+  late final GeneratedColumn<String> snapshotCategoryId =
+      GeneratedColumn<String>(
+        'snapshot_category_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _snapshotCategoryNameMeta =
+      const VerificationMeta('snapshotCategoryName');
+  @override
+  late final GeneratedColumn<String> snapshotCategoryName =
+      GeneratedColumn<String>(
+        'snapshot_category_name',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  @override
+  late final GeneratedColumnWithTypeConverter<MoodTag?, String>
+  snapshotMoodTag = GeneratedColumn<String>(
+    'snapshot_mood_tag',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  ).withConverter<MoodTag?>($RegretCheckinsTable.$convertersnapshotMoodTagn);
+  static const VerificationMeta _snapshotDescriptionMeta =
+      const VerificationMeta('snapshotDescription');
+  @override
+  late final GeneratedColumn<String> snapshotDescription =
+      GeneratedColumn<String>(
+        'snapshot_description',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _snapshotTransactionDateMeta =
+      const VerificationMeta('snapshotTransactionDate');
+  @override
+  late final GeneratedColumn<DateTime> snapshotTransactionDate =
+      GeneratedColumn<DateTime>(
+        'snapshot_transaction_date',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -1656,6 +1719,12 @@ class $RegretCheckinsTable extends RegretCheckins
     promptedAt,
     answeredAt,
     response,
+    snapshotAmountCents,
+    snapshotCategoryId,
+    snapshotCategoryName,
+    snapshotMoodTag,
+    snapshotDescription,
+    snapshotTransactionDate,
     createdAt,
     updatedAt,
   ];
@@ -1707,6 +1776,51 @@ class $RegretCheckinsTable extends RegretCheckins
         answeredAt.isAcceptableOrUnknown(data['answered_at']!, _answeredAtMeta),
       );
     }
+    if (data.containsKey('snapshot_amount_cents')) {
+      context.handle(
+        _snapshotAmountCentsMeta,
+        snapshotAmountCents.isAcceptableOrUnknown(
+          data['snapshot_amount_cents']!,
+          _snapshotAmountCentsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('snapshot_category_id')) {
+      context.handle(
+        _snapshotCategoryIdMeta,
+        snapshotCategoryId.isAcceptableOrUnknown(
+          data['snapshot_category_id']!,
+          _snapshotCategoryIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('snapshot_category_name')) {
+      context.handle(
+        _snapshotCategoryNameMeta,
+        snapshotCategoryName.isAcceptableOrUnknown(
+          data['snapshot_category_name']!,
+          _snapshotCategoryNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('snapshot_description')) {
+      context.handle(
+        _snapshotDescriptionMeta,
+        snapshotDescription.isAcceptableOrUnknown(
+          data['snapshot_description']!,
+          _snapshotDescriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('snapshot_transaction_date')) {
+      context.handle(
+        _snapshotTransactionDateMeta,
+        snapshotTransactionDate.isAcceptableOrUnknown(
+          data['snapshot_transaction_date']!,
+          _snapshotTransactionDateMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -1724,6 +1838,10 @@ class $RegretCheckinsTable extends RegretCheckins
 
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {transactionId},
+  ];
   @override
   RegretCheckin map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
@@ -1754,6 +1872,32 @@ class $RegretCheckinsTable extends RegretCheckins
           data['${effectivePrefix}response'],
         ),
       ),
+      snapshotAmountCents: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}snapshot_amount_cents'],
+      ),
+      snapshotCategoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}snapshot_category_id'],
+      ),
+      snapshotCategoryName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}snapshot_category_name'],
+      ),
+      snapshotMoodTag: $RegretCheckinsTable.$convertersnapshotMoodTagn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}snapshot_mood_tag'],
+        ),
+      ),
+      snapshotDescription: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}snapshot_description'],
+      ),
+      snapshotTransactionDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}snapshot_transaction_date'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -1774,6 +1918,12 @@ class $RegretCheckinsTable extends RegretCheckins
       const EnumNameConverter<RegretResponse>(RegretResponse.values);
   static JsonTypeConverter2<RegretResponse?, String?, String?>
   $converterresponsen = JsonTypeConverter2.asNullable($converterresponse);
+  static JsonTypeConverter2<MoodTag, String, String> $convertersnapshotMoodTag =
+      const EnumNameConverter<MoodTag>(MoodTag.values);
+  static JsonTypeConverter2<MoodTag?, String?, String?>
+  $convertersnapshotMoodTagn = JsonTypeConverter2.asNullable(
+    $convertersnapshotMoodTag,
+  );
 }
 
 class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
@@ -1783,6 +1933,12 @@ class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
   final DateTime? promptedAt;
   final DateTime? answeredAt;
   final RegretResponse? response;
+  final int? snapshotAmountCents;
+  final String? snapshotCategoryId;
+  final String? snapshotCategoryName;
+  final MoodTag? snapshotMoodTag;
+  final String? snapshotDescription;
+  final DateTime? snapshotTransactionDate;
   final DateTime createdAt;
   final DateTime updatedAt;
   const RegretCheckin({
@@ -1792,6 +1948,12 @@ class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
     this.promptedAt,
     this.answeredAt,
     this.response,
+    this.snapshotAmountCents,
+    this.snapshotCategoryId,
+    this.snapshotCategoryName,
+    this.snapshotMoodTag,
+    this.snapshotDescription,
+    this.snapshotTransactionDate,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -1810,6 +1972,28 @@ class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
     if (!nullToAbsent || response != null) {
       map['response'] = Variable<String>(
         $RegretCheckinsTable.$converterresponsen.toSql(response),
+      );
+    }
+    if (!nullToAbsent || snapshotAmountCents != null) {
+      map['snapshot_amount_cents'] = Variable<int>(snapshotAmountCents);
+    }
+    if (!nullToAbsent || snapshotCategoryId != null) {
+      map['snapshot_category_id'] = Variable<String>(snapshotCategoryId);
+    }
+    if (!nullToAbsent || snapshotCategoryName != null) {
+      map['snapshot_category_name'] = Variable<String>(snapshotCategoryName);
+    }
+    if (!nullToAbsent || snapshotMoodTag != null) {
+      map['snapshot_mood_tag'] = Variable<String>(
+        $RegretCheckinsTable.$convertersnapshotMoodTagn.toSql(snapshotMoodTag),
+      );
+    }
+    if (!nullToAbsent || snapshotDescription != null) {
+      map['snapshot_description'] = Variable<String>(snapshotDescription);
+    }
+    if (!nullToAbsent || snapshotTransactionDate != null) {
+      map['snapshot_transaction_date'] = Variable<DateTime>(
+        snapshotTransactionDate,
       );
     }
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -1831,6 +2015,24 @@ class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
       response: response == null && nullToAbsent
           ? const Value.absent()
           : Value(response),
+      snapshotAmountCents: snapshotAmountCents == null && nullToAbsent
+          ? const Value.absent()
+          : Value(snapshotAmountCents),
+      snapshotCategoryId: snapshotCategoryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(snapshotCategoryId),
+      snapshotCategoryName: snapshotCategoryName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(snapshotCategoryName),
+      snapshotMoodTag: snapshotMoodTag == null && nullToAbsent
+          ? const Value.absent()
+          : Value(snapshotMoodTag),
+      snapshotDescription: snapshotDescription == null && nullToAbsent
+          ? const Value.absent()
+          : Value(snapshotDescription),
+      snapshotTransactionDate: snapshotTransactionDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(snapshotTransactionDate),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -1850,6 +2052,24 @@ class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
       response: $RegretCheckinsTable.$converterresponsen.fromJson(
         serializer.fromJson<String?>(json['response']),
       ),
+      snapshotAmountCents: serializer.fromJson<int?>(
+        json['snapshotAmountCents'],
+      ),
+      snapshotCategoryId: serializer.fromJson<String?>(
+        json['snapshotCategoryId'],
+      ),
+      snapshotCategoryName: serializer.fromJson<String?>(
+        json['snapshotCategoryName'],
+      ),
+      snapshotMoodTag: $RegretCheckinsTable.$convertersnapshotMoodTagn.fromJson(
+        serializer.fromJson<String?>(json['snapshotMoodTag']),
+      ),
+      snapshotDescription: serializer.fromJson<String?>(
+        json['snapshotDescription'],
+      ),
+      snapshotTransactionDate: serializer.fromJson<DateTime?>(
+        json['snapshotTransactionDate'],
+      ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -1866,6 +2086,16 @@ class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
       'response': serializer.toJson<String?>(
         $RegretCheckinsTable.$converterresponsen.toJson(response),
       ),
+      'snapshotAmountCents': serializer.toJson<int?>(snapshotAmountCents),
+      'snapshotCategoryId': serializer.toJson<String?>(snapshotCategoryId),
+      'snapshotCategoryName': serializer.toJson<String?>(snapshotCategoryName),
+      'snapshotMoodTag': serializer.toJson<String?>(
+        $RegretCheckinsTable.$convertersnapshotMoodTagn.toJson(snapshotMoodTag),
+      ),
+      'snapshotDescription': serializer.toJson<String?>(snapshotDescription),
+      'snapshotTransactionDate': serializer.toJson<DateTime?>(
+        snapshotTransactionDate,
+      ),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -1878,6 +2108,12 @@ class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
     Value<DateTime?> promptedAt = const Value.absent(),
     Value<DateTime?> answeredAt = const Value.absent(),
     Value<RegretResponse?> response = const Value.absent(),
+    Value<int?> snapshotAmountCents = const Value.absent(),
+    Value<String?> snapshotCategoryId = const Value.absent(),
+    Value<String?> snapshotCategoryName = const Value.absent(),
+    Value<MoodTag?> snapshotMoodTag = const Value.absent(),
+    Value<String?> snapshotDescription = const Value.absent(),
+    Value<DateTime?> snapshotTransactionDate = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => RegretCheckin(
@@ -1887,6 +2123,24 @@ class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
     promptedAt: promptedAt.present ? promptedAt.value : this.promptedAt,
     answeredAt: answeredAt.present ? answeredAt.value : this.answeredAt,
     response: response.present ? response.value : this.response,
+    snapshotAmountCents: snapshotAmountCents.present
+        ? snapshotAmountCents.value
+        : this.snapshotAmountCents,
+    snapshotCategoryId: snapshotCategoryId.present
+        ? snapshotCategoryId.value
+        : this.snapshotCategoryId,
+    snapshotCategoryName: snapshotCategoryName.present
+        ? snapshotCategoryName.value
+        : this.snapshotCategoryName,
+    snapshotMoodTag: snapshotMoodTag.present
+        ? snapshotMoodTag.value
+        : this.snapshotMoodTag,
+    snapshotDescription: snapshotDescription.present
+        ? snapshotDescription.value
+        : this.snapshotDescription,
+    snapshotTransactionDate: snapshotTransactionDate.present
+        ? snapshotTransactionDate.value
+        : this.snapshotTransactionDate,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -1904,6 +2158,24 @@ class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
           ? data.answeredAt.value
           : this.answeredAt,
       response: data.response.present ? data.response.value : this.response,
+      snapshotAmountCents: data.snapshotAmountCents.present
+          ? data.snapshotAmountCents.value
+          : this.snapshotAmountCents,
+      snapshotCategoryId: data.snapshotCategoryId.present
+          ? data.snapshotCategoryId.value
+          : this.snapshotCategoryId,
+      snapshotCategoryName: data.snapshotCategoryName.present
+          ? data.snapshotCategoryName.value
+          : this.snapshotCategoryName,
+      snapshotMoodTag: data.snapshotMoodTag.present
+          ? data.snapshotMoodTag.value
+          : this.snapshotMoodTag,
+      snapshotDescription: data.snapshotDescription.present
+          ? data.snapshotDescription.value
+          : this.snapshotDescription,
+      snapshotTransactionDate: data.snapshotTransactionDate.present
+          ? data.snapshotTransactionDate.value
+          : this.snapshotTransactionDate,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -1918,6 +2190,12 @@ class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
           ..write('promptedAt: $promptedAt, ')
           ..write('answeredAt: $answeredAt, ')
           ..write('response: $response, ')
+          ..write('snapshotAmountCents: $snapshotAmountCents, ')
+          ..write('snapshotCategoryId: $snapshotCategoryId, ')
+          ..write('snapshotCategoryName: $snapshotCategoryName, ')
+          ..write('snapshotMoodTag: $snapshotMoodTag, ')
+          ..write('snapshotDescription: $snapshotDescription, ')
+          ..write('snapshotTransactionDate: $snapshotTransactionDate, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -1932,6 +2210,12 @@ class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
     promptedAt,
     answeredAt,
     response,
+    snapshotAmountCents,
+    snapshotCategoryId,
+    snapshotCategoryName,
+    snapshotMoodTag,
+    snapshotDescription,
+    snapshotTransactionDate,
     createdAt,
     updatedAt,
   );
@@ -1945,6 +2229,12 @@ class RegretCheckin extends DataClass implements Insertable<RegretCheckin> {
           other.promptedAt == this.promptedAt &&
           other.answeredAt == this.answeredAt &&
           other.response == this.response &&
+          other.snapshotAmountCents == this.snapshotAmountCents &&
+          other.snapshotCategoryId == this.snapshotCategoryId &&
+          other.snapshotCategoryName == this.snapshotCategoryName &&
+          other.snapshotMoodTag == this.snapshotMoodTag &&
+          other.snapshotDescription == this.snapshotDescription &&
+          other.snapshotTransactionDate == this.snapshotTransactionDate &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -1956,6 +2246,12 @@ class RegretCheckinsCompanion extends UpdateCompanion<RegretCheckin> {
   final Value<DateTime?> promptedAt;
   final Value<DateTime?> answeredAt;
   final Value<RegretResponse?> response;
+  final Value<int?> snapshotAmountCents;
+  final Value<String?> snapshotCategoryId;
+  final Value<String?> snapshotCategoryName;
+  final Value<MoodTag?> snapshotMoodTag;
+  final Value<String?> snapshotDescription;
+  final Value<DateTime?> snapshotTransactionDate;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -1966,6 +2262,12 @@ class RegretCheckinsCompanion extends UpdateCompanion<RegretCheckin> {
     this.promptedAt = const Value.absent(),
     this.answeredAt = const Value.absent(),
     this.response = const Value.absent(),
+    this.snapshotAmountCents = const Value.absent(),
+    this.snapshotCategoryId = const Value.absent(),
+    this.snapshotCategoryName = const Value.absent(),
+    this.snapshotMoodTag = const Value.absent(),
+    this.snapshotDescription = const Value.absent(),
+    this.snapshotTransactionDate = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -1977,6 +2279,12 @@ class RegretCheckinsCompanion extends UpdateCompanion<RegretCheckin> {
     this.promptedAt = const Value.absent(),
     this.answeredAt = const Value.absent(),
     this.response = const Value.absent(),
+    this.snapshotAmountCents = const Value.absent(),
+    this.snapshotCategoryId = const Value.absent(),
+    this.snapshotCategoryName = const Value.absent(),
+    this.snapshotMoodTag = const Value.absent(),
+    this.snapshotDescription = const Value.absent(),
+    this.snapshotTransactionDate = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -1990,6 +2298,12 @@ class RegretCheckinsCompanion extends UpdateCompanion<RegretCheckin> {
     Expression<DateTime>? promptedAt,
     Expression<DateTime>? answeredAt,
     Expression<String>? response,
+    Expression<int>? snapshotAmountCents,
+    Expression<String>? snapshotCategoryId,
+    Expression<String>? snapshotCategoryName,
+    Expression<String>? snapshotMoodTag,
+    Expression<String>? snapshotDescription,
+    Expression<DateTime>? snapshotTransactionDate,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -2001,6 +2315,17 @@ class RegretCheckinsCompanion extends UpdateCompanion<RegretCheckin> {
       if (promptedAt != null) 'prompted_at': promptedAt,
       if (answeredAt != null) 'answered_at': answeredAt,
       if (response != null) 'response': response,
+      if (snapshotAmountCents != null)
+        'snapshot_amount_cents': snapshotAmountCents,
+      if (snapshotCategoryId != null)
+        'snapshot_category_id': snapshotCategoryId,
+      if (snapshotCategoryName != null)
+        'snapshot_category_name': snapshotCategoryName,
+      if (snapshotMoodTag != null) 'snapshot_mood_tag': snapshotMoodTag,
+      if (snapshotDescription != null)
+        'snapshot_description': snapshotDescription,
+      if (snapshotTransactionDate != null)
+        'snapshot_transaction_date': snapshotTransactionDate,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -2014,6 +2339,12 @@ class RegretCheckinsCompanion extends UpdateCompanion<RegretCheckin> {
     Value<DateTime?>? promptedAt,
     Value<DateTime?>? answeredAt,
     Value<RegretResponse?>? response,
+    Value<int?>? snapshotAmountCents,
+    Value<String?>? snapshotCategoryId,
+    Value<String?>? snapshotCategoryName,
+    Value<MoodTag?>? snapshotMoodTag,
+    Value<String?>? snapshotDescription,
+    Value<DateTime?>? snapshotTransactionDate,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -2025,6 +2356,13 @@ class RegretCheckinsCompanion extends UpdateCompanion<RegretCheckin> {
       promptedAt: promptedAt ?? this.promptedAt,
       answeredAt: answeredAt ?? this.answeredAt,
       response: response ?? this.response,
+      snapshotAmountCents: snapshotAmountCents ?? this.snapshotAmountCents,
+      snapshotCategoryId: snapshotCategoryId ?? this.snapshotCategoryId,
+      snapshotCategoryName: snapshotCategoryName ?? this.snapshotCategoryName,
+      snapshotMoodTag: snapshotMoodTag ?? this.snapshotMoodTag,
+      snapshotDescription: snapshotDescription ?? this.snapshotDescription,
+      snapshotTransactionDate:
+          snapshotTransactionDate ?? this.snapshotTransactionDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -2054,6 +2392,32 @@ class RegretCheckinsCompanion extends UpdateCompanion<RegretCheckin> {
         $RegretCheckinsTable.$converterresponsen.toSql(response.value),
       );
     }
+    if (snapshotAmountCents.present) {
+      map['snapshot_amount_cents'] = Variable<int>(snapshotAmountCents.value);
+    }
+    if (snapshotCategoryId.present) {
+      map['snapshot_category_id'] = Variable<String>(snapshotCategoryId.value);
+    }
+    if (snapshotCategoryName.present) {
+      map['snapshot_category_name'] = Variable<String>(
+        snapshotCategoryName.value,
+      );
+    }
+    if (snapshotMoodTag.present) {
+      map['snapshot_mood_tag'] = Variable<String>(
+        $RegretCheckinsTable.$convertersnapshotMoodTagn.toSql(
+          snapshotMoodTag.value,
+        ),
+      );
+    }
+    if (snapshotDescription.present) {
+      map['snapshot_description'] = Variable<String>(snapshotDescription.value);
+    }
+    if (snapshotTransactionDate.present) {
+      map['snapshot_transaction_date'] = Variable<DateTime>(
+        snapshotTransactionDate.value,
+      );
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -2075,6 +2439,12 @@ class RegretCheckinsCompanion extends UpdateCompanion<RegretCheckin> {
           ..write('promptedAt: $promptedAt, ')
           ..write('answeredAt: $answeredAt, ')
           ..write('response: $response, ')
+          ..write('snapshotAmountCents: $snapshotAmountCents, ')
+          ..write('snapshotCategoryId: $snapshotCategoryId, ')
+          ..write('snapshotCategoryName: $snapshotCategoryName, ')
+          ..write('snapshotMoodTag: $snapshotMoodTag, ')
+          ..write('snapshotDescription: $snapshotDescription, ')
+          ..write('snapshotTransactionDate: $snapshotTransactionDate, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -3588,6 +3958,12 @@ typedef $$RegretCheckinsTableCreateCompanionBuilder =
       Value<DateTime?> promptedAt,
       Value<DateTime?> answeredAt,
       Value<RegretResponse?> response,
+      Value<int?> snapshotAmountCents,
+      Value<String?> snapshotCategoryId,
+      Value<String?> snapshotCategoryName,
+      Value<MoodTag?> snapshotMoodTag,
+      Value<String?> snapshotDescription,
+      Value<DateTime?> snapshotTransactionDate,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -3600,6 +3976,12 @@ typedef $$RegretCheckinsTableUpdateCompanionBuilder =
       Value<DateTime?> promptedAt,
       Value<DateTime?> answeredAt,
       Value<RegretResponse?> response,
+      Value<int?> snapshotAmountCents,
+      Value<String?> snapshotCategoryId,
+      Value<String?> snapshotCategoryName,
+      Value<MoodTag?> snapshotMoodTag,
+      Value<String?> snapshotDescription,
+      Value<DateTime?> snapshotTransactionDate,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -3665,6 +4047,37 @@ class $$RegretCheckinsTableFilterComposer
   get response => $composableBuilder(
     column: $table.response,
     builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<int> get snapshotAmountCents => $composableBuilder(
+    column: $table.snapshotAmountCents,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get snapshotCategoryId => $composableBuilder(
+    column: $table.snapshotCategoryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get snapshotCategoryName => $composableBuilder(
+    column: $table.snapshotCategoryName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<MoodTag?, MoodTag, String>
+  get snapshotMoodTag => $composableBuilder(
+    column: $table.snapshotMoodTag,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<String> get snapshotDescription => $composableBuilder(
+    column: $table.snapshotDescription,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get snapshotTransactionDate => $composableBuilder(
+    column: $table.snapshotTransactionDate,
+    builder: (column) => ColumnFilters(column),
   );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
@@ -3735,6 +4148,36 @@ class $$RegretCheckinsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get snapshotAmountCents => $composableBuilder(
+    column: $table.snapshotAmountCents,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get snapshotCategoryId => $composableBuilder(
+    column: $table.snapshotCategoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get snapshotCategoryName => $composableBuilder(
+    column: $table.snapshotCategoryName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get snapshotMoodTag => $composableBuilder(
+    column: $table.snapshotMoodTag,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get snapshotDescription => $composableBuilder(
+    column: $table.snapshotDescription,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get snapshotTransactionDate => $composableBuilder(
+    column: $table.snapshotTransactionDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -3796,6 +4239,37 @@ class $$RegretCheckinsTableAnnotationComposer
 
   GeneratedColumnWithTypeConverter<RegretResponse?, String> get response =>
       $composableBuilder(column: $table.response, builder: (column) => column);
+
+  GeneratedColumn<int> get snapshotAmountCents => $composableBuilder(
+    column: $table.snapshotAmountCents,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get snapshotCategoryId => $composableBuilder(
+    column: $table.snapshotCategoryId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get snapshotCategoryName => $composableBuilder(
+    column: $table.snapshotCategoryName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<MoodTag?, String> get snapshotMoodTag =>
+      $composableBuilder(
+        column: $table.snapshotMoodTag,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<String> get snapshotDescription => $composableBuilder(
+    column: $table.snapshotDescription,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get snapshotTransactionDate => $composableBuilder(
+    column: $table.snapshotTransactionDate,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -3863,6 +4337,12 @@ class $$RegretCheckinsTableTableManager
                 Value<DateTime?> promptedAt = const Value.absent(),
                 Value<DateTime?> answeredAt = const Value.absent(),
                 Value<RegretResponse?> response = const Value.absent(),
+                Value<int?> snapshotAmountCents = const Value.absent(),
+                Value<String?> snapshotCategoryId = const Value.absent(),
+                Value<String?> snapshotCategoryName = const Value.absent(),
+                Value<MoodTag?> snapshotMoodTag = const Value.absent(),
+                Value<String?> snapshotDescription = const Value.absent(),
+                Value<DateTime?> snapshotTransactionDate = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -3873,6 +4353,12 @@ class $$RegretCheckinsTableTableManager
                 promptedAt: promptedAt,
                 answeredAt: answeredAt,
                 response: response,
+                snapshotAmountCents: snapshotAmountCents,
+                snapshotCategoryId: snapshotCategoryId,
+                snapshotCategoryName: snapshotCategoryName,
+                snapshotMoodTag: snapshotMoodTag,
+                snapshotDescription: snapshotDescription,
+                snapshotTransactionDate: snapshotTransactionDate,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -3885,6 +4371,12 @@ class $$RegretCheckinsTableTableManager
                 Value<DateTime?> promptedAt = const Value.absent(),
                 Value<DateTime?> answeredAt = const Value.absent(),
                 Value<RegretResponse?> response = const Value.absent(),
+                Value<int?> snapshotAmountCents = const Value.absent(),
+                Value<String?> snapshotCategoryId = const Value.absent(),
+                Value<String?> snapshotCategoryName = const Value.absent(),
+                Value<MoodTag?> snapshotMoodTag = const Value.absent(),
+                Value<String?> snapshotDescription = const Value.absent(),
+                Value<DateTime?> snapshotTransactionDate = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -3895,6 +4387,12 @@ class $$RegretCheckinsTableTableManager
                 promptedAt: promptedAt,
                 answeredAt: answeredAt,
                 response: response,
+                snapshotAmountCents: snapshotAmountCents,
+                snapshotCategoryId: snapshotCategoryId,
+                snapshotCategoryName: snapshotCategoryName,
+                snapshotMoodTag: snapshotMoodTag,
+                snapshotDescription: snapshotDescription,
+                snapshotTransactionDate: snapshotTransactionDate,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

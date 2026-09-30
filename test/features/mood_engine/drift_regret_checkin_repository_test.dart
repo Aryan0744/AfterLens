@@ -307,6 +307,7 @@ void main() {
       );
 
       await regretRepository.answerCheckin(
+        profileId: profile.id,
         checkinId: checkin.id,
         response: RegretResponse.regret,
         answeredAt: answeredAt,
@@ -348,6 +349,7 @@ void main() {
 
       expect(
         () => regretRepository.answerCheckin(
+          profileId: profile.id,
           checkinId: checkin.id,
           response: RegretResponse.unsure,
           answeredAt: DateTime(2026, 9, 22, 12),
@@ -386,6 +388,7 @@ void main() {
 
       expect(
         () => regretRepository.answerCheckin(
+          profileId: profile.id,
           checkinId: checkin.id,
           response: RegretResponse.regret,
           answeredAt: DateTime(2026, 9, 22, 11),
@@ -423,6 +426,7 @@ void main() {
       );
 
       await regretRepository.answerCheckin(
+        profileId: profile.id,
         checkinId: checkin.id,
         response: RegretResponse.worthIt,
         answeredAt: DateTime(2026, 9, 22, 10, 5),
@@ -430,6 +434,7 @@ void main() {
 
       expect(
         () => regretRepository.answerCheckin(
+          profileId: profile.id,
           checkinId: checkin.id,
           response: RegretResponse.regret,
           answeredAt: DateTime(2026, 9, 22, 10, 10),
@@ -512,6 +517,7 @@ void main() {
       );
 
       await regretRepository.answerCheckin(
+        profileId: profile.id,
         checkinId: checkin.id,
         response: RegretResponse.worthIt,
         answeredAt: DateTime(2026, 9, 22, 9, 5),

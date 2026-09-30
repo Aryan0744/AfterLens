@@ -18,51 +18,48 @@ class RegretPromptService {
   final RegretCheckinRepository checkinRepository;
   final TransactionRepository transactionRepository;
 
-  /// Both repositories must use the database that runs this transaction.
   final RegretTransactionRunner runInTransaction;
 
-  /// Delivers at most one new reflection per profile per local calendar day.
-  /// An unanswered delivery remains available that day without re-prompting.
-  /// Older deliveries are not automatically resurfaced in V1.
+  /// Returns the oldest due unanswered reflection.
+  ///
+  /// An unanswered reflection remains available until answered.
+  /// Once answered, the next due reflection can become available
+  /// immediately, including on the same calendar day.
   Future<RegretPromptResult> getPrompt({
     required String profileId,
     required DateTime asOf,
   }) => runInTransaction(() async {
-    final delivered = await checkinRepository.getCheckinsPromptedOnDate(
-      profileId: profileId,
-      date: asOf,
-    );
-
-    if (delivered.isNotEmpty) {
-      final today = delivered.first;
-      if (today.isDueAt(asOf) && !today.promptedAt!.isAfter(asOf)) {
-        return RegretPromptResult.available(await _prompt(profileId, today));
-      }
-      return const RegretPromptResult.dailyLimitReached();
-    }
-
     final due = await checkinRepository.getDueCheckins(
       profileId: profileId,
       asOf: asOf,
     );
-    final candidates = due.where((checkin) => !checkin.isPrompted);
-    if (candidates.isEmpty) {
+
+    if (due.isEmpty) {
       return const RegretPromptResult.noDueCheckins();
     }
 
-    final checkin = candidates.first;
-    // Validate ownership and the purchase before recording delivery.
+    final checkin = due.first;
+
     final prompt = await _prompt(profileId, checkin);
+
+    // An already-prompted unanswered reflection stays available.
+    if (checkin.isPrompted) {
+      return RegretPromptResult.available(prompt);
+    }
+
     await checkinRepository.markPrompted(
       checkinId: checkin.id,
       promptedAt: asOf,
     );
+
     final stored = await checkinRepository.getCheckinById(
       checkinId: checkin.id,
     );
+
     if (stored == null) {
       throw StateError('The selected regret check-in no longer exists.');
     }
+
     return RegretPromptResult.available(
       RegretPrompt(checkin: stored, transaction: prompt.transaction),
     );
@@ -77,11 +74,21 @@ class RegretPromptService {
     final checkin = await checkinRepository.getCheckinById(
       checkinId: checkinId,
     );
+
     if (checkin == null) {
       throw StateError('The regret check-in no longer exists.');
     }
+
+    if (!checkin.isPrompted || checkin.isAnswered) {
+      throw StateError(
+        'Only a prompted, unanswered reflection can be answered.',
+      );
+    }
+
     await _prompt(profileId, checkin);
+
     await checkinRepository.answerCheckin(
+      profileId: profileId,
       checkinId: checkinId,
       response: response,
       answeredAt: asOf,
@@ -95,11 +102,14 @@ class RegretPromptService {
     final transaction = await transactionRepository.getTransactionById(
       transactionId: checkin.transactionId,
     );
+
     if (transaction == null || transaction.profileId != profileId) {
       throw StateError(
-        'The reflection purchase is missing or belongs to another profile.',
+        'The reflection purchase is missing or '
+        'belongs to another profile.',
       );
     }
+
     return RegretPrompt(checkin: checkin, transaction: transaction);
   }
 }

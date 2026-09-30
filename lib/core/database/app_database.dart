@@ -21,7 +21,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration {
@@ -153,6 +153,44 @@ END
           ),
         );
       },
+
+      // V5 -> V6: freeze completed reflections using the current ledger data.
+      // Earlier edits cannot be reconstructed. Pending reflections have no
+      // snapshot. Rebuilding also enforces one check-in per purchase and the
+      // answer/snapshot consistency constraint.
+      from5To6: (m, schema) async {
+        String snapshotValue(String column) =>
+            '''
+CASE WHEN answered_at IS NOT NULL AND response IS NOT NULL
+  THEN (SELECT $column FROM transactions t
+    LEFT JOIN categories c ON c.id = t.category_id
+    WHERE t.id = transaction_id)
+  ELSE NULL
+END
+''';
+
+        await m.alterTable(
+          TableMigration(
+            schema.regretCheckins,
+            columnTransformer: {
+              schema.regretCheckins.snapshotAmountCents: CustomExpression<int>(
+                snapshotValue('t.amount_cents'),
+              ),
+              schema.regretCheckins.snapshotCategoryId:
+                  CustomExpression<String>(snapshotValue('t.category_id')),
+              schema.regretCheckins.snapshotCategoryName:
+                  CustomExpression<String>(snapshotValue('c.name')),
+              schema.regretCheckins.snapshotMoodTag: CustomExpression<String>(
+                snapshotValue('t.mood_tag'),
+              ),
+              schema.regretCheckins.snapshotDescription:
+                  CustomExpression<String>(snapshotValue('t.description')),
+              schema.regretCheckins.snapshotTransactionDate:
+                  CustomExpression<int>(snapshotValue('t.transaction_date')),
+            },
+          ),
+        );
+      },
     );
 
     return MigrationStrategy(
@@ -173,20 +211,22 @@ END
         await customStatement('PRAGMA foreign_keys = OFF');
 
         try {
-          await upgrade(m, from, to);
+          await transaction(() async {
+            await upgrade(m, from, to);
 
-          // Make sure the migration did not leave any broken
-          // foreign-key relationships.
-          final foreignKeyErrors = await customSelect(
-            'PRAGMA foreign_key_check',
-          ).get();
+            // Make sure the migration did not leave any broken
+            // foreign-key relationships.
+            final foreignKeyErrors = await customSelect(
+              'PRAGMA foreign_key_check',
+            ).get();
 
-          if (foreignKeyErrors.isNotEmpty) {
-            throw StateError(
-              'Database migration produced foreign-key errors: '
-              '$foreignKeyErrors',
-            );
-          }
+            if (foreignKeyErrors.isNotEmpty) {
+              throw StateError(
+                'Database migration produced foreign-key errors: '
+                '$foreignKeyErrors',
+              );
+            }
+          });
         } finally {
           await customStatement('PRAGMA foreign_keys = ON');
         }

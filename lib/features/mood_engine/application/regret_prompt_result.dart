@@ -8,7 +8,7 @@ class RegretPrompt {
   final AppTransaction transaction;
 }
 
-enum RegretPromptStatus { available, noDueCheckins, dailyLimitReached }
+enum RegretPromptStatus { available, noDueCheckins }
 
 class RegretPromptResult {
   const RegretPromptResult.available(RegretPrompt this.prompt)
@@ -16,10 +16,6 @@ class RegretPromptResult {
 
   const RegretPromptResult.noDueCheckins()
     : status = RegretPromptStatus.noDueCheckins,
-      prompt = null;
-
-  const RegretPromptResult.dailyLimitReached()
-    : status = RegretPromptStatus.dailyLimitReached,
       prompt = null;
 
   final RegretPromptStatus status;

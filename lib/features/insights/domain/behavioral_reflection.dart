@@ -11,17 +11,19 @@ class BehavioralReflection {
     required this.answeredAt,
     this.categoryId,
     this.categoryName,
+    this.description,
   });
 
   final String transactionId;
 
   final int amountCents;
 
-  final MoodTag moodTag;
+  final MoodTag? moodTag;
   final RegretResponse response;
 
   final String? categoryId;
   final String? categoryName;
+  final String? description;
 
   final DateTime transactionDate;
   final DateTime answeredAt;

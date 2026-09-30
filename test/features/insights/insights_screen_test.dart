@@ -1,4 +1,5 @@
 import 'package:afterlens/core/database/app_database.dart';
+import 'package:afterlens/features/mood_engine/data/drift_regret_checkin_repository.dart';
 import 'package:afterlens/core/database/database_provider.dart';
 import 'package:afterlens/features/categories/data/drift_category_repository.dart';
 import 'package:afterlens/features/insights/presentation/insights_screen.dart';
@@ -96,10 +97,14 @@ void main() {
             transactionId: transaction.id,
             dueAt: DateTime(2026, 9, 22),
             promptedAt: Value(DateTime(2026, 9, 22, 9)),
-            answeredAt: Value(DateTime(2026, 9, 22, 10)),
-            response: Value(response),
           ),
         );
+    await DriftRegretCheckinRepository(database).answerCheckin(
+      profileId: profile.id,
+      checkinId: checkinId,
+      response: response,
+      answeredAt: DateTime(2026, 9, 22, 10),
+    );
   }
 
   group('InsightsScreen', () {

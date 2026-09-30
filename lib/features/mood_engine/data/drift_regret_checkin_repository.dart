@@ -168,7 +168,7 @@ class DriftRegretCheckinRepository implements RegretCheckinRepository {
   }
 
   @override
-  Future<void> rescheduleUnpromptedCheckin({
+  Future<void> rescheduleUnansweredCheckin({
     required String checkinId,
     required DateTime dueAt,
   }) async {
@@ -178,11 +178,9 @@ class DriftRegretCheckinRepository implements RegretCheckinRepository {
       throw StateError('Regret check-in $checkinId does not exist.');
     }
 
-    if (checkin.promptedAt != null ||
-        checkin.answeredAt != null ||
-        checkin.response != null) {
+    if (checkin.answeredAt != null || checkin.response != null) {
       throw StateError(
-        'Only an unprompted regret check-in can be rescheduled.',
+        'Only an unanswered regret check-in can be rescheduled.',
       );
     }
 
@@ -208,13 +206,13 @@ class DriftRegretCheckinRepository implements RegretCheckinRepository {
         await (_database.update(_database.regretCheckins)..where(
               (row) =>
                   row.id.equals(checkinId) &
-                  row.promptedAt.isNull() &
                   row.answeredAt.isNull() &
                   row.response.isNull(),
             ))
             .write(
               RegretCheckinsCompanion(
                 dueAt: Value(dueAt),
+                promptedAt: const Value(null),
                 updatedAt: Value(DateTime.now()),
               ),
             );
@@ -225,12 +223,11 @@ class DriftRegretCheckinRepository implements RegretCheckinRepository {
   }
 
   @override
-  Future<void> deleteUnpromptedCheckin({required String checkinId}) async {
+  Future<void> deleteUnansweredCheckin({required String checkinId}) async {
     final affectedRows =
         await (_database.delete(_database.regretCheckins)..where(
               (row) =>
                   row.id.equals(checkinId) &
-                  row.promptedAt.isNull() &
                   row.answeredAt.isNull() &
                   row.response.isNull(),
             ))
@@ -238,7 +235,7 @@ class DriftRegretCheckinRepository implements RegretCheckinRepository {
 
     if (affectedRows != 1) {
       throw StateError(
-        'Only an existing unprompted regret check-in '
+        'Only an existing unanswered regret check-in '
         'can be deleted.',
       );
     }
@@ -293,10 +290,11 @@ class DriftRegretCheckinRepository implements RegretCheckinRepository {
 
   @override
   Future<void> answerCheckin({
+    required String profileId,
     required String checkinId,
     required RegretResponse response,
     required DateTime answeredAt,
-  }) async {
+  }) => _database.transaction(() async {
     final checkin = await getCheckinById(checkinId: checkinId);
 
     if (checkin == null) {
@@ -323,6 +321,33 @@ class DriftRegretCheckinRepository implements RegretCheckinRepository {
       );
     }
 
+    final transaction = await (_database.select(
+      _database.transactions,
+    )..where((row) => row.id.equals(checkin.transactionId))).getSingleOrNull();
+
+    if (transaction == null || transaction.profileId != profileId) {
+      throw StateError(
+        'The reflection purchase is missing or belongs to another profile.',
+      );
+    }
+    if (transaction.transactionType != TransactionType.expense ||
+        transaction.moodTag == null) {
+      throw StateError('Only an expense with a mood can be reflected on.');
+    }
+
+    final categoryId = transaction.categoryId;
+    final category = categoryId == null
+        ? null
+        : await (_database.select(
+            _database.categories,
+          )..where((row) => row.id.equals(categoryId))).getSingleOrNull();
+    if (categoryId != null &&
+        (category == null || category.profileId != profileId)) {
+      throw StateError(
+        'The reflection category is missing or belongs to another profile.',
+      );
+    }
+
     final affectedRows =
         await (_database.update(_database.regretCheckins)..where(
               (row) =>
@@ -335,6 +360,12 @@ class DriftRegretCheckinRepository implements RegretCheckinRepository {
               RegretCheckinsCompanion(
                 response: Value(response),
                 answeredAt: Value(answeredAt),
+                snapshotAmountCents: Value(transaction.amountCents),
+                snapshotCategoryId: Value(categoryId),
+                snapshotCategoryName: Value(category?.name),
+                snapshotMoodTag: Value(transaction.moodTag),
+                snapshotDescription: Value(transaction.description),
+                snapshotTransactionDate: Value(transaction.transactionDate),
                 updatedAt: Value(DateTime.now()),
               ),
             );
@@ -342,7 +373,7 @@ class DriftRegretCheckinRepository implements RegretCheckinRepository {
     if (affectedRows != 1) {
       throw StateError('Regret check-in $checkinId could not be updated.');
     }
-  }
+  });
 
   AppRegretCheckin _mapCheckin(RegretCheckin row) {
     return AppRegretCheckin(
@@ -352,6 +383,16 @@ class DriftRegretCheckinRepository implements RegretCheckinRepository {
       promptedAt: row.promptedAt,
       answeredAt: row.answeredAt,
       response: row.response,
+      snapshot: row.answeredAt == null
+          ? null
+          : RegretSnapshot(
+              amountCents: row.snapshotAmountCents!,
+              categoryId: row.snapshotCategoryId,
+              categoryName: row.snapshotCategoryName,
+              moodTag: row.snapshotMoodTag,
+              description: row.snapshotDescription,
+              transactionDate: row.snapshotTransactionDate!,
+            ),
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     );

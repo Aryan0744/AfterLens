@@ -1,7 +1,6 @@
 import 'package:drift/drift.dart';
 
 import '../../../core/database/app_database.dart';
-import '../../transactions/domain/transaction_types.dart';
 import '../domain/behavioral_insights_repository.dart';
 import '../domain/behavioral_reflection.dart';
 
@@ -38,16 +37,11 @@ class DriftBehavioralInsightsRepository
   ) {
     final checkins = _database.regretCheckins;
     final transactions = _database.transactions;
-    final categories = _database.categories;
 
     final query = _database.select(checkins).join([
       innerJoin(
         transactions,
         transactions.id.equalsExp(checkins.transactionId),
-      ),
-      leftOuterJoin(
-        categories,
-        categories.id.equalsExp(transactions.categoryId),
       ),
     ]);
 
@@ -73,8 +67,6 @@ class DriftBehavioralInsightsRepository
 
     final transaction = row.readTable(_database.transactions);
 
-    final category = row.readTableOrNull(_database.categories);
-
     if (transaction.profileId != profileId) {
       throw StateError(
         'Transaction ${transaction.id} does not belong '
@@ -82,21 +74,11 @@ class DriftBehavioralInsightsRepository
       );
     }
 
-    if (transaction.transactionType != TransactionType.expense) {
+    final amountCents = checkin.snapshotAmountCents;
+    final transactionDate = checkin.snapshotTransactionDate;
+    if (amountCents == null || transactionDate == null) {
       throw StateError(
-        'Completed regret check-in ${checkin.id} '
-        'references non-expense transaction '
-        '${transaction.id}.',
-      );
-    }
-
-    final moodTag = transaction.moodTag;
-
-    if (moodTag == null) {
-      throw StateError(
-        'Completed regret check-in ${checkin.id} '
-        'references transaction ${transaction.id} '
-        'without a mood tag.',
+        'Completed regret check-in ${checkin.id} has no snapshot.',
       );
     }
 
@@ -118,21 +100,17 @@ class DriftBehavioralInsightsRepository
       );
     }
 
-    if (category != null && category.profileId != profileId) {
-      throw StateError(
-        'Category ${category.id} does not belong '
-        'to profile $profileId.',
-      );
-    }
-
+    // The ledger join is only for profile ownership. All behavioral values
+    // come from the immutable reflection, including historical category names.
     return BehavioralReflection(
-      transactionId: transaction.id,
-      amountCents: transaction.amountCents,
-      moodTag: moodTag,
+      transactionId: checkin.transactionId,
+      amountCents: amountCents,
+      moodTag: checkin.snapshotMoodTag,
       response: response,
-      categoryId: category?.id,
-      categoryName: category?.name,
-      transactionDate: transaction.transactionDate,
+      categoryId: checkin.snapshotCategoryId,
+      categoryName: checkin.snapshotCategoryName,
+      description: checkin.snapshotDescription,
+      transactionDate: transactionDate,
       answeredAt: answeredAt,
     );
   }

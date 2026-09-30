@@ -78,7 +78,7 @@ class TransactionManagementService {
         description: description,
       );
 
-      if (existingCheckin != null && existingCheckin.isPrompted) {
+      if (existingCheckin != null && existingCheckin.isAnswered) {
         return TransactionUpdateResult(
           transaction: updatedTransaction,
           regretStatus: RegretReconciliationStatus.preserved,
@@ -116,7 +116,7 @@ class TransactionManagementService {
       }
 
       if (!decision.isEligible) {
-        await checkinRepository.deleteUnpromptedCheckin(
+        await checkinRepository.deleteUnansweredCheckin(
           checkinId: existingCheckin.id,
         );
 
@@ -135,7 +135,7 @@ class TransactionManagementService {
         );
       }
 
-      await checkinRepository.rescheduleUnpromptedCheckin(
+      await checkinRepository.rescheduleUnansweredCheckin(
         checkinId: existingCheckin.id,
         dueAt: dueAt,
       );

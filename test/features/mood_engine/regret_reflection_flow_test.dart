@@ -19,11 +19,13 @@ import 'regret_test_fixture.dart';
 void main() {
   late RegretTestFixture f;
   late DateTime now;
+
   setUp(() async {
     f = RegretTestFixture();
     await f.initialize();
     now = f.now;
   });
+
   tearDown(() => f.database.close());
 
   Future<void> pumpHome(
@@ -32,8 +34,10 @@ void main() {
   }) async {
     addTearDown(() async {
       await tester.pumpWidget(const SizedBox.shrink());
+
       await tester.pump(const Duration(milliseconds: 1));
     });
+
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -48,34 +52,45 @@ void main() {
         ),
       ),
     );
+
     await tester.pumpAndSettle();
   }
 
   Future<void> disposeApp(WidgetTester tester) async {
     await tester.pumpWidget(const SizedBox.shrink());
+
     await tester.pump(const Duration(milliseconds: 1));
   }
 
   Future<void> tapVisible(WidgetTester tester, Finder finder) async {
     await Scrollable.ensureVisible(tester.element(finder), alignment: 0.5);
+
     await tester.pumpAndSettle();
+
     await tester.tap(finder);
+
     await tester.pumpAndSettle();
   }
 
   Future<void> openReflection(WidgetTester tester) async {
     await tapVisible(tester, find.byKey(const Key('regret_reflect_now')));
+
     expect(find.byType(RegretCheckinScreen), findsOneWidget);
   }
 
   for (final response in RegretResponse.values) {
     testWidgets(
-      '${response.name} is saved and Home hides the card without another delivery',
+      '${response.name} is saved and Home advances to the next due reflection',
       (tester) async {
         await f.scheduled();
         await f.scheduled();
+
         await pumpHome(tester);
+
         expect(find.byKey(const Key('regret_prompt_card')), findsOneWidget);
+
+        final firstPrompt = (await f.select()).prompt!;
+
         ScaffoldMessenger.of(tester.element(find.byType(HomeScreen)))
             .showSnackBar(
               const SnackBar(
@@ -83,31 +98,51 @@ void main() {
                 duration: Duration(minutes: 1),
               ),
             );
+
         await tester.pumpAndSettle();
+
         await openReflection(tester);
+
         expect(find.text('Was this purchase worth it?'), findsOneWidget);
+
         expect(find.text('Headphones'), findsOneWidget);
+
         expect(find.text('CAD 25.00'), findsOneWidget);
+
         expect(find.text('Impulse • Sep 26, 2026'), findsOneWidget);
+
         await tapVisible(
           tester,
           find.byKey(ValueKey('regret_response_${response.name}')),
         );
+
         expect(find.byType(RegretCheckinScreen), findsNothing);
-        expect(find.byKey(const Key('regret_prompt_card')), findsNothing);
+
+        // The second due reflection should now be available immediately.
+        expect(find.byKey(const Key('regret_prompt_card')), findsOneWidget);
+
         expect(find.text('Reflection saved.'), findsOneWidget);
-        final deliveries = await f.checkins.getCheckinsPromptedOnDate(
-          profileId: f.profile.id,
-          date: now,
+
+        final storedFirst = await f.checkins.getCheckinById(
+          checkinId: firstPrompt.checkin.id,
         );
-        expect(deliveries, hasLength(1));
-        expect(deliveries.single.response, response);
-        expect(deliveries.single.answeredAt, now);
-        expect(
-          deliveries.single.updatedAt.isBefore(deliveries.single.createdAt),
-          isFalse,
-        );
-        expect((await f.select()).status, RegretPromptStatus.dailyLimitReached);
+
+        expect(storedFirst, isNotNull);
+
+        expect(storedFirst!.response, response);
+
+        expect(storedFirst.answeredAt, now);
+
+        expect(storedFirst.updatedAt.isBefore(storedFirst.createdAt), isFalse);
+
+        final next = await f.select();
+
+        expect(next.status, RegretPromptStatus.available);
+
+        expect(next.prompt!.checkin.id, isNot(firstPrompt.checkin.id));
+
+        expect(next.prompt!.checkin.answeredAt, isNull);
+
         await disposeApp(tester);
       },
     );
@@ -117,16 +152,26 @@ void main() {
     'backing out and rebuilding Home preserves the unanswered prompt',
     (tester) async {
       final checkin = await f.scheduled();
+
       await pumpHome(tester);
+
       await openReflection(tester);
+
       await tester.pageBack();
       await tester.pumpAndSettle();
+
       await pumpHome(tester);
+
       expect(find.byKey(const Key('regret_prompt_card')), findsOneWidget);
+
       final stored = (await f.checkins.getCheckinById(checkinId: checkin.id))!;
+
       expect(stored.answeredAt, isNull);
+
       expect(stored.promptedAt, now);
+
       expect(stored.response, isNull);
+
       await disposeApp(tester);
     },
   );
@@ -135,14 +180,23 @@ void main() {
     tester,
   ) async {
     await f.scheduled();
+
     final service = _ControlledService(f)..answerGate = Completer<void>();
+
     await pumpHome(tester, service: service);
+
     await openReflection(tester);
+
     final answer = find.byKey(const Key('regret_response_worthIt'));
+
     await tester.tap(answer);
+
     await tester.tap(answer);
+
     await tester.pump();
+
     expect(service.saveCalls, 1);
+
     for (final response in RegretResponse.values) {
       expect(
         tester
@@ -153,10 +207,15 @@ void main() {
         isNull,
       );
     }
+
     service.answerGate!.complete();
+
     await tester.pumpAndSettle();
+
     expect(find.byType(RegretCheckinScreen), findsNothing);
+
     expect(service.saveCalls, 1);
+
     await disposeApp(tester);
   });
 
@@ -164,26 +223,38 @@ void main() {
     tester,
   ) async {
     final checkin = await f.scheduled();
+
     final service = _ControlledService(f)..failSaves = true;
+
     await pumpHome(tester, service: service);
+
     await openReflection(tester);
+
     await tapVisible(tester, find.byKey(const Key('regret_response_regret')));
+
     expect(find.byType(RegretCheckinScreen), findsOneWidget);
+
     expect(
       find.text('Could not save your reflection. Please try again.'),
       findsOneWidget,
     );
+
     expect(
       (await f.checkins.getCheckinById(checkinId: checkin.id))!.answeredAt,
       isNull,
     );
+
     service.failSaves = false;
+
     await tapVisible(tester, find.byKey(const Key('regret_response_unsure')));
+
     expect(find.byType(RegretCheckinScreen), findsNothing);
+
     expect(
       (await f.checkins.getCheckinById(checkinId: checkin.id))!.response,
       RegretResponse.unsure,
     );
+
     await disposeApp(tester);
   });
 
@@ -191,10 +262,15 @@ void main() {
     tester,
   ) async {
     final service = _ControlledService(f)..failLoads = true;
+
     await pumpHome(tester, service: service);
+
     expect(find.byKey(const Key('regret_prompt_card')), findsNothing);
+
     await tapVisible(tester, find.byKey(const Key('home_add_expense')));
+
     expect(find.byType(ExpenseEntryScreen), findsOneWidget);
+
     await disposeApp(tester);
   });
 
@@ -202,78 +278,110 @@ void main() {
     'future purchase stays hidden until it becomes due while Home is open',
     (tester) async {
       await f.scheduled(dueAt: now.add(const Duration(seconds: 30)));
+
       await pumpHome(tester);
+
       expect(find.byKey(const Key('regret_prompt_card')), findsNothing);
+
       now = now.add(const Duration(minutes: 1));
+
       await tester.pump(const Duration(minutes: 1));
+
       await tester.pumpAndSettle();
+
       expect(find.byKey(const Key('regret_prompt_card')), findsOneWidget);
+
       await disposeApp(tester);
     },
   );
 
-  testWidgets(
-    'resuming on the next day refreshes the persistent daily allowance',
-    (tester) async {
-      await f.scheduled();
-      await pumpHome(tester);
-      await openReflection(tester);
-      await tapVisible(tester, find.byKey(const Key('regret_response_unsure')));
-      await f.scheduled();
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('regret_prompt_card')), findsNothing);
-      now = now.add(const Duration(days: 1));
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('regret_prompt_card')), findsOneWidget);
-      await disposeApp(tester);
-    },
-  );
+  testWidgets('resuming the app refreshes a reflection that became due', (
+    tester,
+  ) async {
+    await f.scheduled(dueAt: now.add(const Duration(hours: 12)));
+
+    await pumpHome(tester);
+
+    expect(find.byKey(const Key('regret_prompt_card')), findsNothing);
+
+    now = now.add(const Duration(days: 1));
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('regret_prompt_card')), findsOneWidget);
+
+    await disposeApp(tester);
+  });
 
   testWidgets('past-dated expense entry returns to a ready reflection', (
     tester,
   ) async {
-    // The date picker uses the device date; make this full entry flow independent
-    // of the date on which the test runs.
+    // The date picker uses the device date, so make this flow
+    // independent of the date on which the test runs.
     now = DateTime.now();
+
     await pumpHome(tester);
+
     await tapVisible(tester, find.byKey(const Key('home_add_expense')));
+
     await tester.enterText(find.byKey(const Key('expense_amount')), '25.00');
+
     await tapVisible(tester, find.byKey(const Key('expense_category')));
+
     await tester.tap(find.text('Shopping').last);
+
     await tester.pumpAndSettle();
+
     await tapVisible(tester, find.byKey(const Key('expense_mood_impulse')));
+
     await tester.enterText(
       find.byKey(const Key('expense_description')),
       'Headphones',
     );
+
     tester.testTextInput.hide();
+
     await tapVisible(tester, find.byKey(const Key('expense_date')));
+
     await tester.tap(find.byIcon(Icons.edit_outlined));
+
     await tester.pumpAndSettle();
+
     final past = now.subtract(const Duration(days: 3));
+
     await tester.enterText(
       find.byType(TextField).last,
       '${past.month}/${past.day}/${past.year}',
     );
+
     await tester.tap(find.text('OK'));
+
     await tester.pumpAndSettle();
+
     await tapVisible(tester, find.byKey(const Key('expense_save')));
+
     expect(find.byType(ExpenseEntryScreen), findsNothing);
+
     expect(find.byKey(const Key('regret_prompt_card')), findsOneWidget);
-    final deliveries = await f.checkins.getCheckinsPromptedOnDate(
-      profileId: f.profile.id,
-      date: now,
-    );
-    expect(deliveries, hasLength(1));
+
     await openReflection(tester);
+
     await tapVisible(tester, find.byKey(const Key('regret_response_worthIt')));
+
     expect(find.byKey(const Key('regret_prompt_card')), findsNothing);
+
     await disposeApp(tester);
   });
 }
@@ -288,7 +396,9 @@ class _ControlledService extends RegretPromptService {
 
   bool failLoads = false;
   bool failSaves = false;
+
   int saveCalls = 0;
+
   Completer<void>? answerGate;
 
   @override
@@ -296,7 +406,10 @@ class _ControlledService extends RegretPromptService {
     required String profileId,
     required DateTime asOf,
   }) {
-    if (failLoads) throw StateError('Simulated load failure');
+    if (failLoads) {
+      throw StateError('Simulated load failure');
+    }
+
     return super.getPrompt(profileId: profileId, asOf: asOf);
   }
 
@@ -308,8 +421,13 @@ class _ControlledService extends RegretPromptService {
     required DateTime asOf,
   }) async {
     saveCalls++;
+
     await answerGate?.future;
-    if (failSaves) throw StateError('Simulated save failure');
+
+    if (failSaves) {
+      throw StateError('Simulated save failure');
+    }
+
     await super.answerPrompt(
       profileId: profileId,
       checkinId: checkinId,

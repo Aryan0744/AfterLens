@@ -1,6 +1,7 @@
 import 'package:afterlens/core/database/app_database.dart';
 import 'package:afterlens/features/categories/data/drift_category_repository.dart';
 import 'package:afterlens/features/insights/data/drift_behavioral_insights_repository.dart';
+import 'package:afterlens/features/mood_engine/data/drift_regret_checkin_repository.dart';
 import 'package:afterlens/features/mood_engine/domain/regret_response.dart';
 import 'package:afterlens/features/profile/data/drift_profile_repository.dart';
 import 'package:afterlens/features/transactions/data/drift_transaction_repository.dart';
@@ -55,10 +56,17 @@ void main() {
             transactionId: transactionId,
             dueAt: resolvedDueAt,
             promptedAt: Value(resolvedPromptedAt),
-            answeredAt: Value(resolvedAnsweredAt),
-            response: Value(response),
           ),
         );
+    final transaction = (await transactionRepository.getTransactionById(
+      transactionId: transactionId,
+    ))!;
+    await DriftRegretCheckinRepository(database).answerCheckin(
+      profileId: transaction.profileId,
+      checkinId: id,
+      response: response,
+      answeredAt: resolvedAnsweredAt,
+    );
   }
 
   Future<void> insertUnansweredCheckin({
@@ -276,18 +284,9 @@ void main() {
         profileId: profile.id,
       );
 
-      final expectation = expectLater(
-        stream.take(2),
-        emitsInOrder([
-          isEmpty,
-          predicate<List<dynamic>>((items) {
-            return items.length == 1;
-          }),
-        ]),
-      );
-
-      // Allow the initial watched-query result to be emitted.
-      await Future<void>.delayed(Duration.zero);
+      expect(await stream.first, isEmpty);
+      // Scheduling a pending reflection can emit another empty result.
+      final completed = stream.firstWhere((items) => items.isNotEmpty);
 
       await insertAnsweredCheckin(
         id: 'checkin-1',
@@ -295,7 +294,10 @@ void main() {
         response: RegretResponse.worthIt,
       );
 
-      await expectation;
+      final items = await completed;
+      expect(items, hasLength(1));
+      expect(items.single.amountCents, 3200);
+      expect(items.single.response, RegretResponse.worthIt);
     });
   });
 }

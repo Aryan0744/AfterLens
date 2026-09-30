@@ -16,6 +16,7 @@ import '../../features/profile/domain/profile_repository.dart';
 import '../../features/transactions/data/drift_transaction_repository.dart';
 import '../../features/transactions/domain/transaction_repository.dart';
 import '../database/database_provider.dart';
+import '../../features/transactions/application/transaction_management_service.dart';
 
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   final database = ref.watch(appDatabaseProvider);
@@ -93,3 +94,13 @@ final behavioralInsightsServiceProvider = Provider<BehavioralInsightsService>((
 ) {
   return const BehavioralInsightsService();
 });
+
+final transactionManagementServiceProvider =
+    Provider<TransactionManagementService>((ref) {
+      return TransactionManagementService(
+        transactionRepository: ref.watch(transactionRepositoryProvider),
+        checkinRepository: ref.watch(regretCheckinRepositoryProvider),
+        eligibilityPolicy: ref.watch(regretEligibilityPolicyProvider),
+        runInTransaction: ref.watch(appDatabaseProvider).transaction,
+      );
+    });

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/branding/afterlens_logo.dart';
+import '../../insights/presentation/insights_screen.dart';
 import '../../mood_engine/application/regret_prompt_result.dart';
 import '../../mood_engine/presentation/regret_checkin_screen.dart';
 import '../../mood_engine/presentation/regret_prompt_card.dart';
@@ -10,8 +11,8 @@ import '../../profile/domain/app_profile.dart';
 import '../../transactions/domain/app_transaction.dart';
 import '../../transactions/domain/transaction_types.dart';
 import '../../transactions/presentation/expense_entry_screen.dart';
+import '../../transactions/presentation/transaction_details_screen.dart';
 import '../../transactions/presentation/transaction_providers.dart';
-import '../../insights/presentation/insights_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({
@@ -26,6 +27,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final transactionsState = ref.watch(transactionsProvider(profile.id));
+
     final promptState = ref.watch(regretPromptControllerProvider(profile.id));
 
     return Scaffold(
@@ -34,6 +36,7 @@ class HomeScreen extends ConsumerWidget {
         child: RefreshIndicator(
           onRefresh: () async {
             ref.invalidate(transactionsProvider(profile.id));
+
             ref.invalidate(regretPromptControllerProvider(profile.id));
 
             await ref.read(transactionsProvider(profile.id).future);
@@ -69,7 +72,11 @@ class HomeScreen extends ConsumerWidget {
                 error: (error, stackTrace) => const SizedBox.shrink(),
                 data: (result) {
                   final prompt = result.prompt;
-                  if (prompt == null) return const SizedBox.shrink();
+
+                  if (prompt == null) {
+                    return const SizedBox.shrink();
+                  }
+
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 24),
                     child: RegretPromptCard(
@@ -155,6 +162,13 @@ class HomeScreen extends ConsumerWidget {
                           (transaction) => _TransactionTile(
                             transaction: transaction,
                             currencyCode: profile.currencyCode,
+                            onTap: () {
+                              _openTransactionDetails(
+                                context,
+                                ref,
+                                transaction,
+                              );
+                            },
                           ),
                         )
                         .toList(),
@@ -185,12 +199,18 @@ class HomeScreen extends ConsumerWidget {
   ) async {
     final saved = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (context) =>
-            RegretCheckinScreen(profile: profile, prompt: prompt),
+        builder: (context) {
+          return RegretCheckinScreen(profile: profile, prompt: prompt);
+        },
       ),
     );
-    if (!context.mounted) return;
+
+    if (!context.mounted) {
+      return;
+    }
+
     ref.invalidate(regretPromptControllerProvider(profile.id));
+
     if (saved == true) {
       ScaffoldMessenger.of(context)
         ..clearSnackBars()
@@ -222,11 +242,35 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _openTransactionDetails(
+    BuildContext context,
+    WidgetRef ref,
+    AppTransaction transaction,
+  ) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (context) {
+          return TransactionDetailsScreen(
+            profile: profile,
+            transaction: transaction,
+          );
+        },
+      ),
+    );
+
+    if (!context.mounted) {
+      return;
+    }
+
+    ref.invalidate(regretPromptControllerProvider(profile.id));
+  }
+
   static String _formatMoney(int amountCents) {
     final dollars = amountCents ~/ 100;
     final cents = amountCents % 100;
 
-    return '$dollars.${cents.toString().padLeft(2, '0')}';
+    return '$dollars.'
+        '${cents.toString().padLeft(2, '0')}';
   }
 }
 
@@ -296,12 +340,16 @@ class _EmptyTransactions extends StatelessWidget {
               size: 42,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
+
             const SizedBox(height: 12),
+
             Text(
               'No transactions yet',
               style: Theme.of(context).textTheme.titleMedium,
             ),
+
             const SizedBox(height: 6),
+
             Text(
               'Your recent expenses and income '
               'will appear here.',
@@ -329,15 +377,21 @@ class _TransactionsError extends StatelessWidget {
         child: Column(
           children: [
             const Icon(Icons.error_outline, size: 36),
+
             const SizedBox(height: 10),
+
             const Text('Could not load transactions.'),
+
             const SizedBox(height: 6),
+
             Text(
               error.toString(),
               style: Theme.of(context).textTheme.bodySmall,
               textAlign: TextAlign.center,
             ),
+
             const SizedBox(height: 14),
+
             OutlinedButton(onPressed: onRetry, child: const Text('Try again')),
           ],
         ),
@@ -350,10 +404,12 @@ class _TransactionTile extends StatelessWidget {
   const _TransactionTile({
     required this.transaction,
     required this.currencyCode,
+    required this.onTap,
   });
 
   final AppTransaction transaction;
   final String currencyCode;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -367,6 +423,8 @@ class _TransactionTile extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
+        key: ValueKey('transaction_${transaction.id}'),
+        onTap: onTap,
         leading: CircleAvatar(
           child: Icon(isExpense ? Icons.arrow_upward : Icons.arrow_downward),
         ),
@@ -442,6 +500,7 @@ class _TransactionTile extends StatelessWidget {
     final dollars = amountCents ~/ 100;
     final cents = amountCents % 100;
 
-    return '$dollars.${cents.toString().padLeft(2, '0')}';
+    return '$dollars.'
+        '${cents.toString().padLeft(2, '0')}';
   }
 }

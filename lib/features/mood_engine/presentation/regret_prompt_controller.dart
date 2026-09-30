@@ -23,21 +23,29 @@ class RegretPromptController extends AsyncNotifier<RegretPromptResult> {
 
   @override
   Future<RegretPromptResult> build() {
-    // Expense creation and scheduling commit together; the transaction stream
-    // then refreshes Home, including for already-due, past-dated purchases.
+    // Transaction changes can create, remove, or reschedule
+    // a reflection, so refresh when the transaction stream changes.
     ref.watch(transactionsProvider(profileId));
+
     final service = ref.watch(regretPromptServiceProvider);
+
     final clock = ref.watch(regretClockProvider);
 
-    // Refresh due dates and the local-day boundary while Home stays open.
+    // Refresh while Home stays open so reflections can become
+    // available when their due time is reached.
     final timer = Timer(const Duration(minutes: 1), () {
-      final state = WidgetsBinding.instance.lifecycleState;
-      if (state == null || state == AppLifecycleState.resumed) {
+      final lifecycleState = WidgetsBinding.instance.lifecycleState;
+
+      if (lifecycleState == null ||
+          lifecycleState == AppLifecycleState.resumed) {
         ref.invalidateSelf();
       }
     });
+
     final lifecycle = AppLifecycleListener(onResume: ref.invalidateSelf);
+
     ref.onDispose(timer.cancel);
+
     ref.onDispose(lifecycle.dispose);
 
     return service.getPrompt(profileId: profileId, asOf: clock());

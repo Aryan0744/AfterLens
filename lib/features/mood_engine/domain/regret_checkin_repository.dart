@@ -23,19 +23,22 @@ abstract class RegretCheckinRepository {
     required DateTime dueAt,
   });
 
-  Future<void> rescheduleUnpromptedCheckin({
+  /// Resets delivery for an unanswered reflection, retaining its identity.
+  Future<void> rescheduleUnansweredCheckin({
     required String checkinId,
     required DateTime dueAt,
   });
 
-  Future<void> deleteUnpromptedCheckin({required String checkinId});
+  Future<void> deleteUnansweredCheckin({required String checkinId});
 
   Future<void> markPrompted({
     required String checkinId,
     required DateTime promptedAt,
   });
 
+  /// Atomically captures the owned purchase and saves its first, final answer.
   Future<void> answerCheckin({
+    required String profileId,
     required String checkinId,
     required RegretResponse response,
     required DateTime answeredAt,

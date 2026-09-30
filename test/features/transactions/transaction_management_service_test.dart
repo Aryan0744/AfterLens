@@ -194,7 +194,7 @@ void main() {
       expect(checkin, isNull);
     });
 
-    test('prompted check-in is preserved after expense edit', () async {
+    test('ineligible edit removes a prompted, unanswered check-in', () async {
       final transaction = await createExpense(
         amountCents: 2500,
         mood: MoodTag.impulse,
@@ -219,17 +219,13 @@ void main() {
         transactionDate: DateTime(2026, 9, 20),
       );
 
-      expect(result.regretStatus, RegretReconciliationStatus.preserved);
+      expect(result.regretStatus, RegretReconciliationStatus.removed);
 
       final preserved = await checkinRepository.getCheckinForTransaction(
         transactionId: transaction.id,
       );
 
-      expect(preserved, isNotNull);
-
-      expect(preserved!.id, checkin.id);
-
-      expect(preserved.promptedAt, DateTime(2026, 9, 22, 10));
+      expect(preserved, isNull);
     });
 
     test('delete transaction cascades regret check-in', () async {
