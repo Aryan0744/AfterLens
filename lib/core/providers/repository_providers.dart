@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/bootstrap/application/app_bootstrap_service.dart';
 import '../../features/categories/data/drift_category_repository.dart';
 import '../../features/categories/domain/category_repository.dart';
-import '../../features/mood_engine/application/regret_scheduling_service.dart';
+import '../../features/insights/application/behavioral_insights_service.dart';
+import '../../features/insights/data/drift_behavioral_insights_repository.dart';
+import '../../features/insights/domain/behavioral_insights_repository.dart';
 import '../../features/mood_engine/application/regret_prompt_service.dart';
+import '../../features/mood_engine/application/regret_scheduling_service.dart';
 import '../../features/mood_engine/data/drift_regret_checkin_repository.dart';
 import '../../features/mood_engine/domain/regret_checkin_repository.dart';
 import '../../features/mood_engine/domain/regret_eligibility_policy.dart';
@@ -76,4 +79,17 @@ final regretPromptServiceProvider = Provider<RegretPromptService>((ref) {
     transactionRepository: ref.watch(transactionRepositoryProvider),
     runInTransaction: ref.watch(appDatabaseProvider).transaction,
   );
+});
+
+final behavioralInsightsRepositoryProvider =
+    Provider<BehavioralInsightsRepository>((ref) {
+      final database = ref.watch(appDatabaseProvider);
+
+      return DriftBehavioralInsightsRepository(database);
+    });
+
+final behavioralInsightsServiceProvider = Provider<BehavioralInsightsService>((
+  ref,
+) {
+  return const BehavioralInsightsService();
 });

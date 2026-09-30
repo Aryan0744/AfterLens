@@ -11,6 +11,7 @@ import '../../transactions/domain/app_transaction.dart';
 import '../../transactions/domain/transaction_types.dart';
 import '../../transactions/presentation/expense_entry_screen.dart';
 import '../../transactions/presentation/transaction_providers.dart';
+import '../../insights/presentation/insights_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({
@@ -95,6 +96,23 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
 
+              const SizedBox(height: 12),
+
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  key: const Key('home_view_insights'),
+                  onPressed: () {
+                    _openInsights(context);
+                  },
+                  icon: const Icon(Icons.insights_outlined),
+                  label: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Text('View Insights'),
+                  ),
+                ),
+              ),
+
               const SizedBox(height: 32),
 
               Row(
@@ -146,6 +164,16 @@ class HomeScreen extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _openInsights(BuildContext context) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (context) {
+          return InsightsScreen(profile: profile);
+        },
       ),
     );
   }
