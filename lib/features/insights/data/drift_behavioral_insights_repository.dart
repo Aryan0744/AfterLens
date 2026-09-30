@@ -45,6 +45,8 @@ class DriftBehavioralInsightsRepository
       ),
     ]);
 
+    // Completed snapshots outlive ledger deletion, so include soft-deleted
+    // transactions when checking profile ownership.
     query.where(
       transactions.profileId.equals(profileId) &
           checkins.answeredAt.isNotNull() &

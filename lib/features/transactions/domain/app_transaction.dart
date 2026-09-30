@@ -12,6 +12,7 @@ class AppTransaction {
     this.categoryId,
     this.description,
     this.moodTag,
+    this.deletedAt,
   });
 
   final String id;
@@ -28,8 +29,11 @@ class AppTransaction {
   final DateTime transactionDate;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final DateTime? deletedAt;
 
   bool get isExpense => type == TransactionType.expense;
 
   bool get isIncome => type == TransactionType.income;
+
+  bool get isDeleted => deletedAt != null;
 }

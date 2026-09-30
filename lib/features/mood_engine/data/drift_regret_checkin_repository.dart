@@ -51,6 +51,7 @@ class DriftRegretCheckinRepository implements RegretCheckinRepository {
           ])
           ..where(
             _database.transactions.profileId.equals(profileId) &
+                _database.transactions.deletedAt.isNull() &
                 _database.regretCheckins.dueAt.isSmallerOrEqualValue(asOf) &
                 _database.regretCheckins.answeredAt.isNull(),
           )
@@ -113,6 +114,12 @@ class DriftRegretCheckinRepository implements RegretCheckinRepository {
 
     if (transaction == null) {
       throw StateError('Transaction $transactionId does not exist.');
+    }
+
+    if (transaction.deletedAt != null) {
+      throw StateError(
+        'Deleted transaction $transactionId cannot receive a regret check-in.',
+      );
     }
 
     if (transaction.profileId == null) {
@@ -192,6 +199,12 @@ class DriftRegretCheckinRepository implements RegretCheckinRepository {
 
     if (transaction == null) {
       throw StateError('Transaction ${checkin.transactionId} does not exist.');
+    }
+
+    if (transaction.deletedAt != null) {
+      throw StateError(
+        'A deleted transaction cannot have its reflection rescheduled.',
+      );
     }
 
     if (!dueAt.isAfter(transaction.transactionDate)) {
@@ -325,9 +338,11 @@ class DriftRegretCheckinRepository implements RegretCheckinRepository {
       _database.transactions,
     )..where((row) => row.id.equals(checkin.transactionId))).getSingleOrNull();
 
-    if (transaction == null || transaction.profileId != profileId) {
+    if (transaction == null ||
+        transaction.profileId != profileId ||
+        transaction.deletedAt != null) {
       throw StateError(
-        'The reflection purchase is missing or belongs to another profile.',
+        'The reflection purchase is missing, deleted, or belongs to another profile.',
       );
     }
     if (transaction.transactionType != TransactionType.expense ||

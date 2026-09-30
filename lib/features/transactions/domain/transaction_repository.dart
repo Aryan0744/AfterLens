@@ -34,6 +34,8 @@ abstract class TransactionRepository {
     String? description,
   });
 
+  /// Soft-deletes the transaction. The row remains available for historical
+  /// behavioral relationships but is hidden from normal transaction queries.
   Future<void> deleteTransaction({
     required String profileId,
     required String transactionId,

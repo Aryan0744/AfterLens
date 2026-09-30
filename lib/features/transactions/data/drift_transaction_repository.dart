@@ -18,8 +18,11 @@ class DriftTransactionRepository implements TransactionRepository {
     required String transactionId,
   }) async {
     final row =
-        await (_database.select(_database.transactions)
-              ..where((transaction) => transaction.id.equals(transactionId)))
+        await (_database.select(_database.transactions)..where(
+              (transaction) =>
+                  transaction.id.equals(transactionId) &
+                  transaction.deletedAt.isNull(),
+            ))
             .getSingleOrNull();
 
     return row == null ? null : _mapTransaction(row);
@@ -31,7 +34,11 @@ class DriftTransactionRepository implements TransactionRepository {
   }) async {
     final rows =
         await (_database.select(_database.transactions)
-              ..where((transaction) => transaction.profileId.equals(profileId))
+              ..where(
+                (transaction) =>
+                    transaction.profileId.equals(profileId) &
+                    transaction.deletedAt.isNull(),
+              )
               ..orderBy([
                 (transaction) => OrderingTerm.desc(transaction.transactionDate),
                 (transaction) => OrderingTerm.desc(transaction.createdAt),
@@ -44,7 +51,11 @@ class DriftTransactionRepository implements TransactionRepository {
   @override
   Stream<List<AppTransaction>> watchTransactions({required String profileId}) {
     final query = _database.select(_database.transactions)
-      ..where((transaction) => transaction.profileId.equals(profileId))
+      ..where(
+        (transaction) =>
+            transaction.profileId.equals(profileId) &
+            transaction.deletedAt.isNull(),
+      )
       ..orderBy([
         (transaction) => OrderingTerm.desc(transaction.transactionDate),
         (transaction) => OrderingTerm.desc(transaction.createdAt),
@@ -143,7 +154,8 @@ class DriftTransactionRepository implements TransactionRepository {
         await (_database.update(_database.transactions)..where(
               (transaction) =>
                   transaction.id.equals(transactionId) &
-                  transaction.profileId.equals(profileId),
+                  transaction.profileId.equals(profileId) &
+                  transaction.deletedAt.isNull(),
             ))
             .write(
               TransactionsCompanion(
@@ -222,13 +234,21 @@ class DriftTransactionRepository implements TransactionRepository {
     required String profileId,
     required String transactionId,
   }) async {
+    final now = DateTime.now();
+
     final affectedRows =
-        await (_database.delete(_database.transactions)..where(
+        await (_database.update(_database.transactions)..where(
               (transaction) =>
                   transaction.id.equals(transactionId) &
-                  transaction.profileId.equals(profileId),
+                  transaction.profileId.equals(profileId) &
+                  transaction.deletedAt.isNull(),
             ))
-            .go();
+            .write(
+              TransactionsCompanion(
+                deletedAt: Value(now),
+                updatedAt: Value(now),
+              ),
+            );
 
     if (affectedRows != 1) {
       throw StateError(
@@ -327,6 +347,7 @@ class DriftTransactionRepository implements TransactionRepository {
       transactionDate: row.transactionDate,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
+      deletedAt: row.deletedAt,
     );
   }
 }

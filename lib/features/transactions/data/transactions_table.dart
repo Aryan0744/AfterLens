@@ -61,6 +61,10 @@ class Transactions extends Table {
   /// When this record was last modified.
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 
+  /// Null for active transactions; otherwise hidden from the ledger while
+  /// retaining the row for historical behavioral relationships.
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }

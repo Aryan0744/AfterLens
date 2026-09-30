@@ -531,39 +531,70 @@ void main() {
       expect(results, isEmpty);
     });
 
-    test('deleting transaction cascades its regret check-in', () async {
-      final profile = await profileRepository.createLocalProfile(
-        currencyCode: 'CAD',
-      );
+    test(
+      'soft deletion retains the check-in but excludes it from due results',
+      () async {
+        final profile = await profileRepository.createLocalProfile(
+          currencyCode: 'CAD',
+        );
 
-      final category = await categoryRepository.createCustomCategory(
-        profileId: profile.id,
-        name: 'Shopping',
-      );
+        final category = await categoryRepository.createCustomCategory(
+          profileId: profile.id,
+          name: 'Shopping',
+        );
 
-      final transaction = await transactionRepository.createExpense(
-        profileId: profile.id,
-        categoryId: category.id,
-        amountCents: 3500,
-        moodTag: MoodTag.want,
-        transactionDate: DateTime(2026, 9, 20),
-      );
+        final transaction = await transactionRepository.createExpense(
+          profileId: profile.id,
+          categoryId: category.id,
+          amountCents: 3500,
+          moodTag: MoodTag.want,
+          transactionDate: DateTime(2026, 9, 20),
+        );
 
-      final checkin = await regretRepository.scheduleCheckin(
-        transactionId: transaction.id,
-        dueAt: DateTime(2026, 9, 22),
-      );
+        final checkin = await regretRepository.scheduleCheckin(
+          transactionId: transaction.id,
+          dueAt: DateTime(2026, 9, 22),
+        );
 
-      await transactionRepository.deleteTransaction(
-        profileId: profile.id,
-        transactionId: transaction.id,
-      );
+        final original = await database
+            .select(database.regretCheckins)
+            .getSingle();
 
-      final stored = await regretRepository.getCheckinById(
-        checkinId: checkin.id,
-      );
+        await transactionRepository.deleteTransaction(
+          profileId: profile.id,
+          transactionId: transaction.id,
+        );
 
-      expect(stored, isNull);
-    });
+        final stored = await regretRepository.getCheckinById(
+          checkinId: checkin.id,
+        );
+
+        expect(stored, isNotNull);
+        expect(stored!.id, checkin.id);
+        expect(
+          await database.select(database.regretCheckins).getSingle(),
+          original,
+        );
+
+        final deletedTransaction = await database
+            .select(database.transactions)
+            .getSingle();
+        expect(deletedTransaction.id, transaction.id);
+        expect(deletedTransaction.deletedAt, isNotNull);
+        expect(
+          await transactionRepository.getTransactionById(
+            transactionId: transaction.id,
+          ),
+          isNull,
+        );
+        expect(
+          await regretRepository.getDueCheckins(
+            profileId: profile.id,
+            asOf: DateTime(2026, 9, 25),
+          ),
+          isEmpty,
+        );
+      },
+    );
   });
 }

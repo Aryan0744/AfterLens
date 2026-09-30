@@ -167,6 +167,16 @@ class TransactionManagementService {
         );
       }
 
+      final checkin = await checkinRepository.getCheckinForTransaction(
+        transactionId: transactionId,
+      );
+
+      // Pending reflections disappear with the deleted purchase. Completed
+      // snapshots remain untouched and continue to contribute to Insights.
+      if (checkin != null && !checkin.isAnswered) {
+        await checkinRepository.deleteUnansweredCheckin(checkinId: checkin.id);
+      }
+
       await transactionRepository.deleteTransaction(
         profileId: profileId,
         transactionId: transactionId,
