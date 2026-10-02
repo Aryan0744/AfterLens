@@ -1,4 +1,6 @@
-class CategoryInsight {
+import 'reflection_summary.dart';
+
+class CategoryInsight with ReflectionSummary {
   const CategoryInsight({
     required this.categoryName,
     required this.answeredCount,
@@ -15,28 +17,18 @@ class CategoryInsight {
   final String? categoryId;
   final String categoryName;
 
+  @override
   final int answeredCount;
 
+  @override
   final int worthItCount;
+  @override
   final int regretCount;
+  @override
   final int unsureCount;
 
   final int totalReflectedSpendCents;
   final int worthItSpendCents;
   final int regrettedSpendCents;
   final int unsureSpendCents;
-
-  int get decisiveCount => worthItCount + regretCount;
-
-  double? get regretRate {
-    if (decisiveCount == 0) {
-      return null;
-    }
-
-    return regretCount / decisiveCount;
-  }
-
-  bool hasMinimumPatternSample({int minimumSampleSize = 3}) {
-    return decisiveCount >= minimumSampleSize;
-  }
 }

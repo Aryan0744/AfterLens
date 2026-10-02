@@ -3,10 +3,20 @@
 
 Spend with better hindsight.
 
-AfterLens is a privacy-first personal finance and spending reflection application
-built with Flutter, Riverpod, and Drift. The product direction combines spending
-forecasts with mood and regret check-ins. The current app contains the database
-foundation and a branded preview screen; financial workflows are still to come.
+AfterLens helps you understand which purchases you later value, regret, or
+question. Record a purchase, return for a reflection, then explore your saved
+history and behavioral Insights.
+
+The local Flutter app uses Riverpod and Drift/SQLite. It includes expense entry
+and editing, soft deletion, category management, six spending moods, one-tap
+reflections, snapshot-backed history, Insights with sample-size rules, onboarding
+and basic settings. Want/Impulse purchases strictly above 15.00 in the profile's
+currency are ready to reflect on two days after their purchase date.
+
+Development status, decisions and validation are tracked in the
+[V1 delivery plan](docs/v1-delivery-plan.md). See the
+[product direction](docs/product-direction.md) for the supplied vision and the
+[beta readiness checklist](docs/v1-beta-readiness.md) for release gates.
 
 ## Development
 
@@ -15,9 +25,9 @@ flutter pub get
 flutter run
 ```
 
-Use `flutter analyze` and `flutter test` for checks. The preview follows the system
-light/dark setting and uses the approved SVG logo. Interface typography and the
-full product design system will be defined separately.
+Use `flutter analyze` and `flutter test` for checks. The app follows the system
+light/dark setting and uses the approved SVG logo. It currently has no cloud sync,
+bank integration, AI coaching or budgeting engine.
 
 ## Branding
 

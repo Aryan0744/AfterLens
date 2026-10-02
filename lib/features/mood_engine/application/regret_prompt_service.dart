@@ -44,7 +44,7 @@ class RegretPromptService {
 
     // An already-prompted unanswered reflection stays available.
     if (checkin.isPrompted) {
-      return RegretPromptResult.available(prompt);
+      return RegretPromptResult.available(prompt, dueCount: due.length);
     }
 
     await checkinRepository.markPrompted(
@@ -62,6 +62,7 @@ class RegretPromptService {
 
     return RegretPromptResult.available(
       RegretPrompt(checkin: stored, transaction: prompt.transaction),
+      dueCount: due.length,
     );
   });
 

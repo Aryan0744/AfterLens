@@ -62,9 +62,7 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final categoriesState = ref.watch(
-      activeCategoriesProvider(widget.profile.id),
-    );
+    final categoriesState = ref.watch(categoriesProvider(widget.profile.id));
 
     return Scaffold(
       appBar: AppBar(title: const Text('Edit Expense')),
@@ -74,7 +72,16 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
           error: (error, stackTrace) =>
               Center(child: Text('Could not load categories: $error')),
           data: (categories) {
-            return _buildForm(context, categories);
+            return _buildForm(
+              context,
+              categories
+                  .where(
+                    (category) =>
+                        !category.isArchived ||
+                        category.id == widget.transaction.categoryId,
+                  )
+                  .toList(),
+            );
           },
         ),
       ),
@@ -148,6 +155,7 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
             DropdownButtonFormField<String>(
               key: const Key('edit_expense_category'),
               initialValue: categoryExists ? _selectedCategoryId : null,
+              isExpanded: true,
               decoration: const InputDecoration(
                 labelText: 'Category',
                 border: OutlineInputBorder(),
@@ -156,7 +164,11 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
                   .map(
                     (category) => DropdownMenuItem<String>(
                       value: category.id,
-                      child: Text(category.name),
+                      child: Text(
+                        category.isArchived
+                            ? '${category.name} (archived)'
+                            : category.name,
+                      ),
                     ),
                   )
                   .toList(),
@@ -168,7 +180,7 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
                       });
                     },
               validator: (value) {
-                if (value == null) {
+                if (value == null || !categories.any((c) => c.id == value)) {
                   return 'Select a category.';
                 }
 
@@ -192,6 +204,7 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
                 return ChoiceChip(
                   key: ValueKey('edit_expense_mood_${mood.name}'),
                   label: Text(_moodLabel(mood)),
+                  tooltip: mood.explanation,
                   selected: _selectedMood == mood,
                   onSelected: _isSaving
                       ? null
@@ -207,6 +220,10 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
                 );
               }).toList(),
             ),
+            if (_selectedMood != null) ...[
+              const SizedBox(height: 8),
+              Text(_selectedMood!.explanation),
+            ],
 
             if (_showMoodError && _selectedMood == null) ...[
               const SizedBox(height: 8),

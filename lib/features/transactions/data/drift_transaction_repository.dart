@@ -72,7 +72,7 @@ class DriftTransactionRepository implements TransactionRepository {
     required MoodTag moodTag,
     required DateTime transactionDate,
     String? description,
-  }) async {
+  }) => _database.transaction(() async {
     _validateAmount(amountCents);
 
     final normalizedDescription = _normalizeDescription(description);
@@ -113,7 +113,7 @@ class DriftTransactionRepository implements TransactionRepository {
       createdAt: now,
       updatedAt: now,
     );
-  }
+  });
 
   @override
   Future<AppTransaction> updateExpense({
@@ -124,12 +124,10 @@ class DriftTransactionRepository implements TransactionRepository {
     required MoodTag moodTag,
     required DateTime transactionDate,
     String? description,
-  }) async {
+  }) => _database.transaction(() async {
     _validateAmount(amountCents);
 
     final normalizedDescription = _normalizeDescription(description);
-
-    await _ensureUsableCategory(profileId: profileId, categoryId: categoryId);
 
     final existing = await getTransactionById(transactionId: transactionId);
 
@@ -147,6 +145,12 @@ class DriftTransactionRepository implements TransactionRepository {
     if (!existing.isExpense) {
       throw StateError('Transaction $transactionId is not an expense.');
     }
+
+    await _ensureUsableCategory(
+      profileId: profileId,
+      categoryId: categoryId,
+      allowArchived: existing.categoryId == categoryId,
+    );
 
     final now = DateTime.now();
 
@@ -184,7 +188,7 @@ class DriftTransactionRepository implements TransactionRepository {
       createdAt: existing.createdAt,
       updatedAt: now,
     );
-  }
+  });
 
   @override
   Future<AppTransaction> createIncome({
@@ -271,6 +275,7 @@ class DriftTransactionRepository implements TransactionRepository {
   Future<void> _ensureUsableCategory({
     required String profileId,
     required String categoryId,
+    bool allowArchived = false,
   }) async {
     final category = await (_database.select(
       _database.categories,
@@ -287,7 +292,7 @@ class DriftTransactionRepository implements TransactionRepository {
       );
     }
 
-    if (category.isArchived) {
+    if (category.isArchived && !allowArchived) {
       throw StateError(
         'Archived category $categoryId cannot be used '
         'for a new transaction.',

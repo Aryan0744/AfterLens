@@ -191,6 +191,9 @@ END
           ),
         );
       },
+      from6To7: (m, schema) async {
+        await m.addColumn(schema.transactions, schema.transactions.deletedAt);
+      },
     );
 
     return MigrationStrategy(
@@ -212,16 +215,7 @@ END
 
         try {
           await transaction(() async {
-            // The generated helper covers V1 -> V6. Respect older targets
-            // when validating individual historical migration steps.
-            if (from < 6) {
-              await upgrade(m, from, to < 6 ? to : 6);
-            }
-
-            // V6 -> V7: keep deleted purchases for completed reflections.
-            if (from < 7 && to >= 7) {
-              await m.addColumn(transactions, transactions.deletedAt);
-            }
+            await upgrade(m, from, to);
 
             // Make sure the migration did not leave any broken
             // foreign-key relationships.

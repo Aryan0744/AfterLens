@@ -1,6 +1,9 @@
 import 'app_category.dart';
 
 abstract class CategoryRepository {
+  /// Includes archived categories for historical display and management.
+  Stream<List<AppCategory>> watchCategories({required String profileId});
+
   Future<List<AppCategory>> getActiveCategories({required String profileId});
 
   Stream<List<AppCategory>> watchActiveCategories({required String profileId});
@@ -21,6 +24,12 @@ abstract class CategoryRepository {
   Future<void> archiveCategory({
     required String profileId,
     required String categoryId,
+  });
+
+  Future<void> renameCategory({
+    required String profileId,
+    required String categoryId,
+    required String name,
   });
 
   Future<void> restoreCategory({

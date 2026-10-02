@@ -1,7 +1,8 @@
+import 'reflection_summary.dart';
 import 'category_insight.dart';
 import 'mood_insight.dart';
 
-class BehavioralInsights {
+class BehavioralInsights with ReflectionSummary {
   const BehavioralInsights({
     required this.answeredCount,
     required this.worthItCount,
@@ -15,10 +16,14 @@ class BehavioralInsights {
     required this.categoryInsights,
   });
 
+  @override
   final int answeredCount;
 
+  @override
   final int worthItCount;
+  @override
   final int regretCount;
+  @override
   final int unsureCount;
 
   final int totalReflectedSpendCents;
@@ -29,19 +34,5 @@ class BehavioralInsights {
   final List<MoodInsight> moodInsights;
   final List<CategoryInsight> categoryInsights;
 
-  int get decisiveCount => worthItCount + regretCount;
-
-  double? get regretRate {
-    if (decisiveCount == 0) {
-      return null;
-    }
-
-    return regretCount / decisiveCount;
-  }
-
   bool get hasReflections => answeredCount > 0;
-
-  bool hasMinimumPatternSample({int minimumSampleSize = 3}) {
-    return decisiveCount >= minimumSampleSize;
-  }
 }

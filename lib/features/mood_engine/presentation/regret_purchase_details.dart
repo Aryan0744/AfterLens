@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../categories/presentation/category_providers.dart';
 
 import '../../transactions/domain/app_transaction.dart';
 import '../../transactions/domain/transaction_types.dart';
 
-class RegretPurchaseDetails extends StatelessWidget {
+class RegretPurchaseDetails extends ConsumerWidget {
   const RegretPurchaseDetails({
     required this.transaction,
     required this.currencyCode,
@@ -14,7 +17,18 @@ class RegretPurchaseDetails extends StatelessWidget {
   final String currencyCode;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final categories = ref.watch(categoriesProvider(transaction.profileId));
+    final categoryName = categories.when(
+      loading: () => 'Loading category…',
+      error: (error, stackTrace) => 'Could not load category',
+      data: (items) =>
+          items
+              .where((item) => item.id == transaction.categoryId)
+              .firstOrNull
+              ?.name ??
+          'Category not recorded',
+    );
     final description = transaction.description?.trim();
     final amount = transaction.amountCents;
     final money =
@@ -45,6 +59,7 @@ class RegretPurchaseDetails extends StatelessWidget {
         Text(
           [
             ?mood,
+            categoryName,
             MaterialLocalizations.of(context)
                 .formatShortDate(transaction.transactionDate.toLocal()),
           ].join(' • '),

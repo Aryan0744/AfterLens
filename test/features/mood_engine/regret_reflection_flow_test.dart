@@ -109,7 +109,7 @@ void main() {
 
         expect(find.text('CAD 25.00'), findsOneWidget);
 
-        expect(find.text('Impulse • Sep 26, 2026'), findsOneWidget);
+        expect(find.text('Impulse • Shopping • Sep 26, 2026'), findsOneWidget);
 
         await tapVisible(
           tester,

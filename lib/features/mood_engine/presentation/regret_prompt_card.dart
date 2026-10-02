@@ -8,12 +8,14 @@ class RegretPromptCard extends StatelessWidget {
     required this.prompt,
     required this.currencyCode,
     required this.onReflect,
+    this.dueCount = 1,
     super.key,
   });
 
   final RegretPrompt prompt;
   final String currencyCode;
   final VoidCallback onReflect;
+  final int dueCount;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +39,9 @@ class RegretPromptCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            const Text('Take a moment to reflect on this purchase.'),
+            Text(
+              '$dueCount ${dueCount == 1 ? 'purchase waiting' : 'purchases waiting'}. Reflect on one at a time.',
+            ),
             const SizedBox(height: 20),
             RegretPurchaseDetails(
               transaction: prompt.transaction,

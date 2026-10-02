@@ -3,16 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/branding/afterlens_logo.dart';
 import '../../insights/presentation/insights_screen.dart';
+import '../../insights/presentation/reflection_history_screen.dart';
 import '../../mood_engine/application/regret_prompt_result.dart';
 import '../../mood_engine/presentation/regret_checkin_screen.dart';
 import '../../mood_engine/presentation/regret_prompt_card.dart';
 import '../../mood_engine/presentation/regret_prompt_controller.dart';
 import '../../profile/domain/app_profile.dart';
+import '../../settings/presentation/settings_screen.dart';
 import '../../transactions/domain/app_transaction.dart';
 import '../../transactions/domain/transaction_types.dart';
 import '../../transactions/presentation/expense_entry_screen.dart';
 import '../../transactions/presentation/transaction_details_screen.dart';
 import '../../transactions/presentation/transaction_providers.dart';
+import 'learning_progress_card.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({
@@ -31,7 +34,31 @@ class HomeScreen extends ConsumerWidget {
     final promptState = ref.watch(regretPromptControllerProvider(profile.id));
 
     return Scaffold(
-      appBar: AppBar(title: const AfterLensLogo(width: 130)),
+      appBar: AppBar(
+        title: const AfterLensLogo(width: 130),
+        actions: [
+          IconButton(
+            key: const Key('home_settings'),
+            tooltip: 'Settings',
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => Navigator.of(context).push<void>(
+              MaterialPageRoute(
+                builder: (context) => SettingsScreen(profile: profile),
+              ),
+            ),
+          ),
+          IconButton(
+            key: const Key('home_view_history'),
+            tooltip: 'Reflection History',
+            icon: const Icon(Icons.history),
+            onPressed: () => Navigator.of(context).push<void>(
+              MaterialPageRoute(
+                builder: (context) => ReflectionHistoryScreen(profile: profile),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
@@ -46,41 +73,47 @@ class HomeScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(24),
             children: [
               Text(
-                'Your spending starts here.',
+                'Spend with better hindsight.',
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
 
               const SizedBox(height: 10),
 
               Text(
-                'Track what you spend and understand '
-                'the decisions behind it.',
+                'Record a purchase. Reflect later. Learn what feels worth it.',
                 style: Theme.of(context).textTheme.bodyMedium,
-              ),
-
-              const SizedBox(height: 24),
-
-              _ProfileSummaryCard(
-                currencyCode: profile.currencyCode,
-                categoryCount: categoryCount,
               ),
 
               const SizedBox(height: 24),
 
               promptState.when(
                 loading: () => const SizedBox.shrink(),
-                error: (error, stackTrace) => const SizedBox.shrink(),
+                error: (error, stackTrace) => ListTile(
+                  title: const Text('Could not load reflections.'),
+                  trailing: TextButton(
+                    onPressed: () => ref.invalidate(
+                      regretPromptControllerProvider(profile.id),
+                    ),
+                    child: const Text('Try again'),
+                  ),
+                ),
                 data: (result) {
                   final prompt = result.prompt;
 
                   if (prompt == null) {
-                    return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Text(
+                        'No reflections waiting. Want and Impulse purchases above ${profile.currencyCode} 15.00 are ready two days after the purchase date.',
+                      ),
+                    );
                   }
 
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 24),
                     child: RegretPromptCard(
                       prompt: prompt,
+                      dueCount: result.dueCount,
                       currencyCode: profile.currencyCode,
                       onReflect: () => _openReflection(context, ref, prompt),
                     ),
@@ -175,6 +208,8 @@ class HomeScreen extends ConsumerWidget {
                   );
                 },
               ),
+              const SizedBox(height: 24),
+              LearningProgressCard(profile: profile),
             ],
           ),
         ),
@@ -271,57 +306,6 @@ class HomeScreen extends ConsumerWidget {
 
     return '$dollars.'
         '${cents.toString().padLeft(2, '0')}';
-  }
-}
-
-class _ProfileSummaryCard extends StatelessWidget {
-  const _ProfileSummaryCard({
-    required this.currencyCode,
-    required this.categoryCount,
-  });
-
-  final String currencyCode;
-  final int categoryCount;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          children: [
-            Expanded(
-              child: _SummaryItem(label: 'Currency', value: currencyCode),
-            ),
-            Expanded(
-              child: _SummaryItem(
-                label: 'Categories',
-                value: categoryCount.toString(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SummaryItem extends StatelessWidget {
-  const _SummaryItem({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
-        const SizedBox(height: 4),
-        Text(value, style: Theme.of(context).textTheme.titleLarge),
-      ],
-    );
   }
 }
 

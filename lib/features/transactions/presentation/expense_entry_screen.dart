@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../categories/domain/app_category.dart';
 import '../../categories/presentation/category_providers.dart';
+import '../../categories/presentation/category_management_screen.dart';
 import '../../profile/domain/app_profile.dart';
 import '../domain/transaction_types.dart';
 import 'transaction_entry_controller.dart';
@@ -70,6 +71,31 @@ class _ExpenseEntryScreenState extends ConsumerState<ExpenseEntryScreen> {
             );
           },
           data: (categories) {
+            if (categories.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Create or restore a category to record an expense.',
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).push<void>(
+                          MaterialPageRoute(
+                            builder: (context) => CategoryManagementScreen(
+                              profile: widget.profile,
+                            ),
+                          ),
+                        ),
+                        child: const Text('Manage categories'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
             return _buildForm(context, categories, transactionState.isLoading);
           },
         ),
@@ -137,7 +163,13 @@ class _ExpenseEntryScreenState extends ConsumerState<ExpenseEntryScreen> {
             // ----------------------------------------------------------
             DropdownButtonFormField<String>(
               key: const Key('expense_category'),
-              initialValue: _selectedCategoryId,
+              initialValue:
+                  categories.any(
+                    (category) => category.id == _selectedCategoryId,
+                  )
+                  ? _selectedCategoryId
+                  : null,
+              isExpanded: true,
               decoration: const InputDecoration(
                 labelText: 'Category',
                 border: OutlineInputBorder(),
@@ -158,7 +190,8 @@ class _ExpenseEntryScreenState extends ConsumerState<ExpenseEntryScreen> {
                       });
                     },
               validator: (value) {
-                if (value == null) {
+                if (value == null ||
+                    !categories.any((category) => category.id == value)) {
                   return 'Select a category.';
                 }
 
@@ -192,6 +225,7 @@ class _ExpenseEntryScreenState extends ConsumerState<ExpenseEntryScreen> {
                 return ChoiceChip(
                   key: ValueKey('expense_mood_${mood.name}'),
                   label: Text(_moodLabel(mood)),
+                  tooltip: mood.explanation,
                   selected: _selectedMood == mood,
                   onSelected: isSaving
                       ? null
@@ -207,6 +241,10 @@ class _ExpenseEntryScreenState extends ConsumerState<ExpenseEntryScreen> {
                 );
               }).toList(),
             ),
+            if (_selectedMood != null) ...[
+              const SizedBox(height: 8),
+              Text(_selectedMood!.explanation),
+            ],
 
             if (_showMoodError && _selectedMood == null) ...[
               const SizedBox(height: 8),

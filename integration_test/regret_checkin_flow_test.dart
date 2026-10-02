@@ -17,7 +17,7 @@ import 'package:path_provider/path_provider.dart';
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('past-dated expenses, reflection and persistent daily cap', (
+  testWidgets('past-dated expenses, reflection queue and persistent history', (
     tester,
   ) async {
     // Exercise real on-device SQLite without changing the user's normal data.
@@ -50,7 +50,7 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    Future<void> addExpense(String description) async {
+    Future<void> addExpense(String description, {int daysAgo = 3}) async {
       await tapVisible(find.byKey(const Key('home_add_expense')));
       await tester.enterText(find.byKey(const Key('expense_amount')), '25.00');
       await tapVisible(find.byKey(const Key('expense_category')));
@@ -64,7 +64,7 @@ void main() {
       await tester.pumpAndSettle();
       await tapVisible(find.byKey(const Key('expense_date')));
       await tapVisible(find.byIcon(Icons.edit_outlined));
-      final past = DateTime.now().subtract(const Duration(days: 3));
+      final past = DateTime.now().subtract(Duration(days: daysAgo));
       await tester.enterText(
         find.byType(TextField).last,
         '${past.month}/${past.day}/${past.year}',
@@ -84,7 +84,9 @@ void main() {
     await tapVisible(find.text('Continue'));
     expect(find.byType(HomeScreen), findsOneWidget);
 
-    await addExpense('Headphones');
+    // Distinct dates make oldest-first ordering deterministic. Equal due dates
+    // use random UUIDs as the tie-breaker and may prompt the later-created row.
+    await addExpense('Headphones', daysAgo: 4);
     await homeTop();
     expect(find.byKey(const Key('regret_prompt_card')), findsOneWidget);
     if (Platform.isAndroid) await binding.convertFlutterSurfaceToImage();
@@ -108,12 +110,12 @@ void main() {
     await tapVisible(find.byKey(const Key('regret_reflect_now')));
     await tapVisible(find.byKey(const Key('regret_response_worthIt')));
     expect(find.byType(RegretCheckinScreen), findsNothing);
-    expect(find.byKey(const Key('regret_prompt_card')), findsNothing);
+    expect(find.byKey(const Key('regret_prompt_card')), findsOneWidget);
     expect(find.text('Reflection saved.'), findsOneWidget);
     checkins = await database.select(database.regretCheckins).get();
     final answered = checkins.singleWhere((item) => item.answeredAt != null);
     expect(answered.response, RegretResponse.worthIt);
-    expect(checkins.where((item) => item.promptedAt != null), hasLength(1));
+    expect(checkins.where((item) => item.promptedAt != null), hasLength(2));
     await homeTop();
     await binding.takeScreenshot('regret-home-completed');
 
@@ -123,12 +125,26 @@ void main() {
     database = AppDatabase(NativeDatabase(file));
     await launch();
     expect(find.byType(HomeScreen), findsOneWidget);
-    expect(find.byKey(const Key('regret_prompt_card')), findsNothing);
+    expect(find.byKey(const Key('regret_prompt_card')), findsOneWidget);
     expect(
       (await database.select(database.regretCheckins).get()).where(
         (item) => item.promptedAt != null,
       ),
-      hasLength(1),
+      hasLength(2),
+    );
+    await tapVisible(find.byKey(const Key('home_view_history')));
+    expect(find.text('Reflection History'), findsOneWidget);
+    expect(find.text('Worth it'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tapVisible(find.byKey(const Key('regret_reflect_now')));
+    await tapVisible(find.byKey(const Key('regret_response_unsure')));
+    expect(find.byKey(const Key('regret_prompt_card')), findsNothing);
+    expect(
+      (await database.select(database.regretCheckins).get()).where(
+        (item) => item.answeredAt != null,
+      ),
+      hasLength(2),
     );
 
     await tester.pumpWidget(const SizedBox.shrink());

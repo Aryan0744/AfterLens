@@ -154,10 +154,12 @@ void main() {
 
       expect(find.text('Based on 3 reflections.'), findsOneWidget);
 
-      expect(find.text('50%'), findsOneWidget);
+      expect(find.text('50% regret'), findsNothing);
+      expect(find.text('Reviewed purchases: 3'), findsOneWidget);
 
       expect(find.text('1 regretted • 1 worth it • 1 unsure'), findsOneWidget);
 
+      await tester.scrollUntilVisible(find.text('CAD 10.00'), 150);
       expect(find.text('CAD 15.00'), findsOneWidget);
 
       expect(find.text('CAD 25.00'), findsOneWidget);
@@ -280,7 +282,7 @@ void main() {
 
       expect(
         find.descendant(of: categoryCard, matching: find.text('50% regret')),
-        findsOneWidget,
+        findsNothing,
       );
 
       expect(
@@ -333,7 +335,11 @@ void main() {
 
       expect(find.text('Based on 1 reflection.'), findsOneWidget);
 
-      expect(find.text('100%'), findsOneWidget);
+      expect(find.text('100% regret'), findsNothing);
+      expect(
+        find.text('Not enough data: 1 of 3 decisive reflections.'),
+        findsWidgets,
+      );
 
       expect(find.text('CAD 25.00'), findsNWidgets(2));
 

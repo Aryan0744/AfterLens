@@ -13,6 +13,14 @@ class DriftCategoryRepository implements CategoryRepository {
   final Uuid _uuid;
 
   @override
+  Stream<List<AppCategory>> watchCategories({required String profileId}) {
+    final query = _database.select(_database.categories)
+      ..where((category) => category.profileId.equals(profileId))
+      ..orderBy([(category) => OrderingTerm.asc(category.name)]);
+    return query.watch().map((rows) => rows.map(_mapCategory).toList());
+  }
+
+  @override
   Future<List<AppCategory>> getActiveCategories({
     required String profileId,
   }) async {
@@ -55,7 +63,7 @@ class DriftCategoryRepository implements CategoryRepository {
   Future<AppCategory> createCustomCategory({
     required String profileId,
     required String name,
-  }) async {
+  }) => _database.transaction(() async {
     final normalizedName = _normalizeName(name);
 
     await _ensureProfileExists(profileId);
@@ -102,14 +110,14 @@ class DriftCategoryRepository implements CategoryRepository {
       createdAt: now,
       updatedAt: now,
     );
-  }
+  });
 
   @override
   Future<AppCategory> ensureSystemCategory({
     required String profileId,
     required String systemKey,
     required String name,
-  }) async {
+  }) => _database.transaction(() async {
     await _ensureProfileExists(profileId);
 
     final normalizedName = _normalizeName(name);
@@ -171,7 +179,7 @@ class DriftCategoryRepository implements CategoryRepository {
       createdAt: now,
       updatedAt: now,
     );
-  }
+  });
 
   @override
   Future<void> archiveCategory({
@@ -202,7 +210,7 @@ class DriftCategoryRepository implements CategoryRepository {
   Future<void> restoreCategory({
     required String profileId,
     required String categoryId,
-  }) async {
+  }) => _database.transaction(() async {
     final category = await getCategoryById(categoryId: categoryId);
 
     if (category == null || category.profileId != profileId) {
@@ -234,7 +242,41 @@ class DriftCategoryRepository implements CategoryRepository {
             updatedAt: Value(DateTime.now()),
           ),
         );
-  }
+  });
+
+  @override
+  Future<void> renameCategory({
+    required String profileId,
+    required String categoryId,
+    required String name,
+  }) => _database.transaction(() async {
+    final normalized = _normalizeName(name);
+    final category = await getCategoryById(categoryId: categoryId);
+    if (category == null || category.profileId != profileId) {
+      throw StateError('Category was not found for this profile.');
+    }
+    if (!category.isArchived) {
+      final active = await getActiveCategories(profileId: profileId);
+      if (active.any(
+        (item) =>
+            item.id != categoryId &&
+            item.name.trim().toLowerCase() == normalized.toLowerCase(),
+      )) {
+        throw StateError(
+          'An active category named "$normalized" already exists.',
+        );
+      }
+    }
+    await (_database.update(_database.categories)..where(
+          (row) => row.id.equals(categoryId) & row.profileId.equals(profileId),
+        ))
+        .write(
+          CategoriesCompanion(
+            name: Value(normalized),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+  });
 
   Future<void> _ensureProfileExists(String profileId) async {
     final profile = await (_database.select(

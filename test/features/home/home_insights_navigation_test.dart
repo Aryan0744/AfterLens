@@ -2,6 +2,8 @@ import 'package:afterlens/core/database/app_database.dart';
 import 'package:afterlens/core/database/database_provider.dart';
 import 'package:afterlens/features/home/presentation/home_screen.dart';
 import 'package:afterlens/features/insights/presentation/insights_screen.dart';
+import 'package:afterlens/features/insights/presentation/reflection_history_screen.dart';
+import 'package:afterlens/features/categories/presentation/category_management_screen.dart';
 import 'package:afterlens/features/profile/data/drift_profile_repository.dart';
 import 'package:afterlens/features/profile/domain/app_profile.dart';
 import 'package:drift/native.dart';
@@ -58,6 +60,33 @@ void main() {
 
     expect(find.text('Your insights will grow as you reflect'), findsOneWidget);
 
+    await disposeTestApp(tester);
+  });
+
+  testWidgets('Home opens history and settings category management', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [appDatabaseProvider.overrideWithValue(database)],
+        child: MaterialApp(
+          home: HomeScreen(profile: profile, categoryCount: 0),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('home_view_history')));
+    await tester.pumpAndSettle();
+    expect(find.byType(ReflectionHistoryScreen), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('home_settings')));
+    await tester.pumpAndSettle();
+    expect(find.text('Record → return → reflect'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('settings_categories')));
+    await tester.pumpAndSettle();
+    expect(find.byType(CategoryManagementScreen), findsOneWidget);
+    expect(find.text('Create category'), findsOneWidget);
     await disposeTestApp(tester);
   });
 }

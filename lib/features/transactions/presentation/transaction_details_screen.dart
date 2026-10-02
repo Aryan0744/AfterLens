@@ -37,9 +37,7 @@ class _TransactionDetailsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final categoriesState = ref.watch(
-      activeCategoriesProvider(widget.profile.id),
-    );
+    final categoriesState = ref.watch(categoriesProvider(widget.profile.id));
 
     final categoryName = categoriesState.maybeWhen(
       data: (categories) {
@@ -49,8 +47,9 @@ class _TransactionDetailsScreenState
           }
         }
 
-        return 'Unavailable';
+        return 'Category not recorded';
       },
+      error: (error, stackTrace) => 'Could not load category',
       orElse: () => 'Loading...',
     );
 
@@ -173,8 +172,9 @@ class _TransactionDetailsScreenState
         return AlertDialog(
           title: const Text('Delete transaction?'),
           content: const Text(
-            'This permanently deletes the transaction '
-            'and any reflection linked to it.',
+            'This removes the transaction from your ledger and cancels any '
+            'pending reflection. Completed reflections stay in your history '
+            'and Insights.',
           ),
           actions: [
             TextButton(

@@ -1,6 +1,7 @@
+import 'reflection_summary.dart';
 import '../../transactions/domain/transaction_types.dart';
 
-class MoodInsight {
+class MoodInsight with ReflectionSummary {
   const MoodInsight({
     required this.mood,
     required this.answeredCount,
@@ -15,28 +16,18 @@ class MoodInsight {
 
   final MoodTag mood;
 
+  @override
   final int answeredCount;
 
+  @override
   final int worthItCount;
+  @override
   final int regretCount;
+  @override
   final int unsureCount;
 
   final int totalReflectedSpendCents;
   final int worthItSpendCents;
   final int regrettedSpendCents;
   final int unsureSpendCents;
-
-  int get decisiveCount => worthItCount + regretCount;
-
-  double? get regretRate {
-    if (decisiveCount == 0) {
-      return null;
-    }
-
-    return regretCount / decisiveCount;
-  }
-
-  bool hasMinimumPatternSample({int minimumSampleSize = 3}) {
-    return decisiveCount >= minimumSampleSize;
-  }
 }

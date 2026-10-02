@@ -11,12 +11,17 @@ class RegretPrompt {
 enum RegretPromptStatus { available, noDueCheckins }
 
 class RegretPromptResult {
-  const RegretPromptResult.available(RegretPrompt this.prompt)
-    : status = RegretPromptStatus.available;
+  const RegretPromptResult.available(
+    RegretPrompt this.prompt, {
+    this.dueCount = 1,
+  }) : status = RegretPromptStatus.available;
 
   const RegretPromptResult.noDueCheckins()
     : status = RegretPromptStatus.noDueCheckins,
-      prompt = null;
+      prompt = null,
+      dueCount = 0;
+
+  final int dueCount;
 
   final RegretPromptStatus status;
   final RegretPrompt? prompt;

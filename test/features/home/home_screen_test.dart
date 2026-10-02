@@ -128,7 +128,7 @@ void main() {
 
       expect(find.text('-CAD 23.50'), findsOneWidget);
 
-      expect(find.textContaining('Want'), findsOneWidget);
+      expect(find.text('Sep 29, 2026 • Want'), findsOneWidget);
 
       expect(find.text('No transactions yet'), findsNothing);
 

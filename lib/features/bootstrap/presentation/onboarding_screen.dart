@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/branding/afterlens_logo.dart';
 import 'app_bootstrap_controller.dart';
+import 'reflection_guide.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -50,14 +51,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     const Center(child: AfterLensLogo(width: 220)),
                     const SizedBox(height: 48),
                     Text(
-                      'Set up your account',
+                      'Spend with better hindsight',
                       style: Theme.of(context).textTheme.headlineMedium,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Choose the currency AfterLens should use '
-                      'for your spending and budget data.',
+                      'Learn which purchases you value, regret, or question. '
+                      'Choose a currency to start your local profile.',
                       style: Theme.of(context).textTheme.bodyLarge,
                       textAlign: TextAlign.center,
                     ),
@@ -92,6 +93,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         padding: EdgeInsets.symmetric(vertical: 14),
                         child: Text('Continue'),
                       ),
+                    ),
+                    const SizedBox(height: 32),
+                    const ReflectionGuide(
+                      currencyCode: 'your currency',
+                      showMoods: false,
                     ),
                   ],
                 ),
