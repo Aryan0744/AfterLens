@@ -5,6 +5,7 @@ import '../../../core/database/app_database.dart';
 import '../domain/app_transaction.dart';
 import '../domain/transaction_repository.dart';
 import '../domain/transaction_types.dart';
+import '../../../core/validation/transaction_description.dart';
 
 class DriftTransactionRepository implements TransactionRepository {
   DriftTransactionRepository(this._database, {Uuid? uuid})
@@ -311,25 +312,7 @@ class DriftTransactionRepository implements TransactionRepository {
   }
 
   String? _normalizeDescription(String? description) {
-    if (description == null) {
-      return null;
-    }
-
-    final value = description.trim();
-
-    if (value.isEmpty) {
-      return null;
-    }
-
-    if (value.length > 200) {
-      throw ArgumentError.value(
-        description,
-        'description',
-        'Description cannot exceed 200 characters.',
-      );
-    }
-
-    return value;
+    return normalizeTransactionDescription(description);
   }
 
   AppTransaction _mapTransaction(Transaction row) {

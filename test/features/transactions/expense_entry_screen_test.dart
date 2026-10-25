@@ -466,7 +466,7 @@ void main() {
 
         expect(
           find.text(
-            'Enter a valid amount greater than zero.',
+            'Enter an amount between 0.01 and 999,999,999.99.',
           ),
           findsOneWidget,
         );
@@ -507,7 +507,7 @@ void main() {
 
         expect(
           find.text(
-            'Enter a valid amount greater than zero.',
+            'Enter an amount between 0.01 and 999,999,999.99.',
           ),
           findsOneWidget,
         );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/branding/afterlens_logo.dart';
+import '../../../core/formatting/currency_support.dart';
 import 'app_bootstrap_controller.dart';
 import 'reflection_guide.dart';
 
@@ -27,7 +28,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       return;
     }
 
-    final currencyCode = _currencyController.text.trim().toUpperCase();
+    final currencyCode = normalizeSupportedCurrencyCode(
+      _currencyController.text,
+    );
+
+    if (currencyCode == null) {
+      return;
+    }
 
     await ref
         .read(appBootstrapControllerProvider.notifier)
@@ -49,20 +56,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const Center(child: AfterLensLogo(width: 220)),
-                    const SizedBox(height: 48),
+
+                    const SizedBox(height: 40),
+
                     Text(
                       'Spend with better hindsight',
                       style: Theme.of(context).textTheme.headlineMedium,
                       textAlign: TextAlign.center,
                     ),
+
                     const SizedBox(height: 12),
+
                     Text(
-                      'Learn which purchases you value, regret, or question. '
-                      'Choose a currency to start your local profile.',
+                      'Record purchases, reflect on them later, '
+                      'and learn which spending decisions feel worth it.',
                       style: Theme.of(context).textTheme.bodyLarge,
                       textAlign: TextAlign.center,
                     ),
+
                     const SizedBox(height: 32),
+
                     TextFormField(
                       controller: _currencyController,
                       textCapitalization: TextCapitalization.characters,
@@ -70,35 +83,40 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       decoration: const InputDecoration(
                         labelText: 'Currency code',
                         hintText: 'CAD',
-                        helperText: 'Enter a 3-letter code such as CAD or USD.',
+                        helperText: 'Enter a supported currency such as CAD, USD, or INR.',
                         border: OutlineInputBorder(),
                       ),
                       validator: (value) {
-                        final currency = value?.trim().toUpperCase() ?? '';
-
-                        if (!RegExp(r'^[A-Z]{3}$').hasMatch(currency)) {
-                          return 'Enter a valid 3-letter currency code.';
+                        if (!isSupportedCurrencyCode(value)) {
+                          return 'Enter a supported currency code.';
                         }
 
                         return null;
                       },
-                      onFieldSubmitted: (_) {
-                        _continue();
+                      onChanged: (_) {
+                        setState(() {});
                       },
                     ),
-                    const SizedBox(height: 24),
+
+                    const SizedBox(height: 28),
+
+                    ReflectionGuide(
+                      currencyCode: _guideCurrencyCode,
+                      showMoods: true,
+                    ),
+
+                    const SizedBox(height: 32),
+
                     FilledButton(
+                      key: const Key('onboarding_continue'),
                       onPressed: _continue,
                       child: const Padding(
                         padding: EdgeInsets.symmetric(vertical: 14),
                         child: Text('Continue'),
                       ),
                     ),
-                    const SizedBox(height: 32),
-                    const ReflectionGuide(
-                      currencyCode: 'your currency',
-                      showMoods: false,
-                    ),
+
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -107,5 +125,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         ),
       ),
     );
+  }
+
+  String get _guideCurrencyCode {
+    return normalizeSupportedCurrencyCode(_currencyController.text) ?? 'CAD';
   }
 }

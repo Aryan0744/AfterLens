@@ -82,7 +82,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('home_settings')));
     await tester.pumpAndSettle();
-    expect(find.text('Record → return → reflect'), findsOneWidget);
+    expect(find.text('Record → Reflect → Learn'), findsOneWidget);
     await tester.tap(find.byKey(const Key('settings_categories')));
     await tester.pumpAndSettle();
     expect(find.byType(CategoryManagementScreen), findsOneWidget);

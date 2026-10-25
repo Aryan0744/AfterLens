@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/branding/afterlens_logo.dart';
+import '../../../core/formatting/money_display.dart';
 import '../../insights/presentation/insights_screen.dart';
 import '../../insights/presentation/reflection_history_screen.dart';
 import '../../mood_engine/application/regret_prompt_result.dart';
@@ -12,6 +13,7 @@ import '../../profile/domain/app_profile.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../../transactions/domain/app_transaction.dart';
 import '../../transactions/domain/transaction_types.dart';
+import '../../transactions/presentation/all_transactions_screen.dart';
 import '../../transactions/presentation/expense_entry_screen.dart';
 import '../../transactions/presentation/transaction_details_screen.dart';
 import '../../transactions/presentation/transaction_providers.dart';
@@ -41,21 +43,29 @@ class HomeScreen extends ConsumerWidget {
             key: const Key('home_settings'),
             tooltip: 'Settings',
             icon: const Icon(Icons.settings_outlined),
-            onPressed: () => Navigator.of(context).push<void>(
-              MaterialPageRoute(
-                builder: (context) => SettingsScreen(profile: profile),
-              ),
-            ),
+            onPressed: () {
+              Navigator.of(context).push<void>(
+                MaterialPageRoute(
+                  builder: (context) {
+                    return SettingsScreen(profile: profile);
+                  },
+                ),
+              );
+            },
           ),
           IconButton(
             key: const Key('home_view_history'),
             tooltip: 'Reflection History',
             icon: const Icon(Icons.history),
-            onPressed: () => Navigator.of(context).push<void>(
-              MaterialPageRoute(
-                builder: (context) => ReflectionHistoryScreen(profile: profile),
-              ),
-            ),
+            onPressed: () {
+              Navigator.of(context).push<void>(
+                MaterialPageRoute(
+                  builder: (context) {
+                    return ReflectionHistoryScreen(profile: profile);
+                  },
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -80,7 +90,8 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 10),
 
               Text(
-                'Record a purchase. Reflect later. Learn what feels worth it.',
+                'Record a purchase. Reflect later. '
+                'Learn what feels worth it.',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
 
@@ -88,15 +99,19 @@ class HomeScreen extends ConsumerWidget {
 
               promptState.when(
                 loading: () => const SizedBox.shrink(),
-                error: (error, stackTrace) => ListTile(
-                  title: const Text('Could not load reflections.'),
-                  trailing: TextButton(
-                    onPressed: () => ref.invalidate(
-                      regretPromptControllerProvider(profile.id),
+                error: (error, stackTrace) {
+                  return ListTile(
+                    title: const Text('Could not load reflections.'),
+                    trailing: TextButton(
+                      onPressed: () {
+                        ref.invalidate(
+                          regretPromptControllerProvider(profile.id),
+                        );
+                      },
+                      child: const Text('Try again'),
                     ),
-                    child: const Text('Try again'),
-                  ),
-                ),
+                  );
+                },
                 data: (result) {
                   final prompt = result.prompt;
 
@@ -104,7 +119,11 @@ class HomeScreen extends ConsumerWidget {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: Text(
-                        'No reflections waiting. Want and Impulse purchases above ${profile.currencyCode} 15.00 are ready two days after the purchase date.',
+                        'No reflections waiting. '
+                        'Want and Impulse purchases above '
+                        '${profile.currencyCode} 15.00 '
+                        'are ready two days after the '
+                        'purchase date.',
                       ),
                     );
                   }
@@ -115,7 +134,9 @@ class HomeScreen extends ConsumerWidget {
                       prompt: prompt,
                       dueCount: result.dueCount,
                       currencyCode: profile.currencyCode,
-                      onReflect: () => _openReflection(context, ref, prompt),
+                      onReflect: () {
+                        _openReflection(context, ref, prompt);
+                      },
                     ),
                   );
                 },
@@ -156,11 +177,19 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 32),
 
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Recent transactions',
-                    style: Theme.of(context).textTheme.titleLarge,
+                  Expanded(
+                    child: Text(
+                      'Recent transactions',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                  TextButton(
+                    key: const Key('home_see_all_transactions'),
+                    onPressed: () {
+                      _openAllTransactions(context, ref);
+                    },
+                    child: const Text('See all'),
                   ),
                 ],
               ),
@@ -208,7 +237,9 @@ class HomeScreen extends ConsumerWidget {
                   );
                 },
               ),
+
               const SizedBox(height: 24),
+
               LearningProgressCard(profile: profile),
             ],
           ),
@@ -225,6 +256,22 @@ class HomeScreen extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  Future<void> _openAllTransactions(BuildContext context, WidgetRef ref) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (context) {
+          return AllTransactionsScreen(profile: profile);
+        },
+      ),
+    );
+
+    if (!context.mounted) {
+      return;
+    }
+
+    ref.invalidate(regretPromptControllerProvider(profile.id));
   }
 
   Future<void> _openReflection(
@@ -271,7 +318,10 @@ class HomeScreen extends ConsumerWidget {
         content: Text(
           'Expense saved: '
           '${profile.currencyCode} '
-          '${_formatMoney(transaction.amountCents)}',
+          '${formatMoneyCents(
+            transaction.amountCents,
+            currencyCode: profile.currencyCode,
+          )}',
         ),
       ),
     );
@@ -298,14 +348,6 @@ class HomeScreen extends ConsumerWidget {
     }
 
     ref.invalidate(regretPromptControllerProvider(profile.id));
-  }
-
-  static String _formatMoney(int amountCents) {
-    final dollars = amountCents ~/ 100;
-    final cents = amountCents % 100;
-
-    return '$dollars.'
-        '${cents.toString().padLeft(2, '0')}';
   }
 }
 
@@ -366,14 +408,6 @@ class _TransactionsError extends StatelessWidget {
 
             const Text('Could not load transactions.'),
 
-            const SizedBox(height: 6),
-
-            Text(
-              error.toString(),
-              style: Theme.of(context).textTheme.bodySmall,
-              textAlign: TextAlign.center,
-            ),
-
             const SizedBox(height: 14),
 
             OutlinedButton(onPressed: onRetry, child: const Text('Try again')),
@@ -402,25 +436,102 @@ class _TransactionTile extends StatelessWidget {
     final amountText =
         '${isExpense ? '-' : '+'}'
         '$currencyCode '
-        '${_formatMoney(transaction.amountCents)}';
+        '${formatMoneyCents(
+          transaction.amountCents,
+          currencyCode: currencyCode,
+        )}';
+
+    final textScale = MediaQuery.textScalerOf(context).scale(14) / 14;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
-      child: ListTile(
+      child: InkWell(
         key: ValueKey('transaction_${transaction.id}'),
         onTap: onTap,
-        leading: CircleAvatar(
-          child: Icon(isExpense ? Icons.arrow_upward : Icons.arrow_downward),
-        ),
-        title: Text(_transactionTitle(transaction)),
-        subtitle: Text(_transactionSubtitle(transaction)),
-        trailing: Text(
-          amountText,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: isExpense
-                ? Theme.of(context).colorScheme.error
-                : Theme.of(context).colorScheme.primary,
-            fontWeight: FontWeight.w600,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final shouldStack =
+                  constraints.maxWidth < 360 || textScale >= 1.4;
+
+              final details = Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    child: Icon(
+                      isExpense ? Icons.arrow_upward : Icons.arrow_downward,
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _transactionTitle(transaction),
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+
+                        const SizedBox(height: 4),
+
+                        Text(
+                          _transactionSubtitle(transaction),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+
+              if (shouldStack) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    details,
+
+                    const SizedBox(height: 12),
+
+                    Text(
+                      amountText,
+                      textAlign: TextAlign.end,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: isExpense
+                            ? Theme.of(context).colorScheme.error
+                            : Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(child: details),
+
+                  const SizedBox(width: 16),
+
+                  Flexible(
+                    child: Text(
+                      amountText,
+                      textAlign: TextAlign.end,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: isExpense
+                            ? Theme.of(context).colorScheme.error
+                            : Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -478,13 +589,5 @@ class _TransactionTile extends StatelessWidget {
 
     return '${months[date.month - 1]} '
         '${date.day}, ${date.year}';
-  }
-
-  String _formatMoney(int amountCents) {
-    final dollars = amountCents ~/ 100;
-    final cents = amountCents % 100;
-
-    return '$dollars.'
-        '${cents.toString().padLeft(2, '0')}';
   }
 }

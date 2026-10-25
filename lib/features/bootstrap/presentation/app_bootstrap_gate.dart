@@ -15,7 +15,6 @@ class AppBootstrapGate extends ConsumerWidget {
     return bootstrapState.when(
       loading: () => const _BootstrapLoadingScreen(),
       error: (error, stackTrace) => _BootstrapErrorScreen(
-        error: error,
         onRetry: () {
           ref.read(appBootstrapControllerProvider.notifier).refresh();
         },
@@ -29,7 +28,6 @@ class AppBootstrapGate extends ConsumerWidget {
 
         if (profile == null) {
           return _BootstrapErrorScreen(
-            error: StateError('Bootstrap returned ready without a profile.'),
             onRetry: () {
               ref.read(appBootstrapControllerProvider.notifier).refresh();
             },
@@ -57,9 +55,8 @@ class _BootstrapLoadingScreen extends StatelessWidget {
 }
 
 class _BootstrapErrorScreen extends StatelessWidget {
-  const _BootstrapErrorScreen({required this.error, required this.onRetry});
+  const _BootstrapErrorScreen({required this.onRetry});
 
-  final Object error;
   final VoidCallback onRetry;
 
   @override
@@ -80,7 +77,11 @@ class _BootstrapErrorScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                Text(error.toString(), textAlign: TextAlign.center),
+                const Text(
+                  'Something went wrong while loading your data. '
+                  'Please try again.',
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 24),
                 FilledButton(
                   onPressed: onRetry,

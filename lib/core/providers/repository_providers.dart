@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/bootstrap/application/app_bootstrap_service.dart';
 import '../../features/categories/data/drift_category_repository.dart';
 import '../../features/categories/domain/category_repository.dart';
+import '../../features/data_export/application/data_export_service.dart';
 import '../../features/insights/application/behavioral_insights_service.dart';
 import '../../features/insights/data/drift_behavioral_insights_repository.dart';
 import '../../features/insights/domain/behavioral_insights_repository.dart';
@@ -13,10 +14,10 @@ import '../../features/mood_engine/domain/regret_checkin_repository.dart';
 import '../../features/mood_engine/domain/regret_eligibility_policy.dart';
 import '../../features/profile/data/drift_profile_repository.dart';
 import '../../features/profile/domain/profile_repository.dart';
+import '../../features/transactions/application/transaction_management_service.dart';
 import '../../features/transactions/data/drift_transaction_repository.dart';
 import '../../features/transactions/domain/transaction_repository.dart';
 import '../database/database_provider.dart';
-import '../../features/transactions/application/transaction_management_service.dart';
 
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   final database = ref.watch(appDatabaseProvider);
@@ -104,3 +105,7 @@ final transactionManagementServiceProvider =
         runInTransaction: ref.watch(appDatabaseProvider).transaction,
       );
     });
+
+final dataExportServiceProvider = Provider<DataExportService>((ref) {
+  return DataExportService(ref.watch(appDatabaseProvider));
+});

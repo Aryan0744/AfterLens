@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 
+import '../../../core/formatting/money_input.dart';
 import '../../../core/providers/repository_providers.dart';
 import '../../categories/domain/app_category.dart';
 import '../../categories/presentation/category_providers.dart';
@@ -8,6 +10,7 @@ import '../../profile/domain/app_profile.dart';
 import '../domain/app_transaction.dart';
 import '../domain/transaction_types.dart';
 import 'transaction_providers.dart';
+import '../../../core/validation/transaction_description.dart';
 
 class ExpenseEditScreen extends ConsumerStatefulWidget {
   const ExpenseEditScreen({
@@ -41,7 +44,7 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
     super.initState();
 
     _amountController = TextEditingController(
-      text: _formatInputAmount(widget.transaction.amountCents),
+      text: formatCentsForInput(widget.transaction.amountCents),
     );
 
     _descriptionController = TextEditingController(
@@ -57,6 +60,7 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
   void dispose() {
     _amountController.dispose();
     _descriptionController.dispose();
+
     super.dispose();
   }
 
@@ -69,19 +73,25 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
       body: SafeArea(
         child: categoriesState.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stackTrace) =>
-              Center(child: Text('Could not load categories: $error')),
+          error: (error, stackTrace) => const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Text(
+                'Could not load categories. Please try again.',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
           data: (categories) {
-            return _buildForm(
-              context,
-              categories
-                  .where(
-                    (category) =>
-                        !category.isArchived ||
-                        category.id == widget.transaction.categoryId,
-                  )
-                  .toList(),
-            );
+            final usableCategories = categories
+                .where(
+                  (category) =>
+                      !category.isArchived ||
+                      category.id == widget.transaction.categoryId,
+                )
+                .toList();
+
+            return _buildForm(context, usableCategories);
           },
         ),
       ),
@@ -92,6 +102,7 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
     final checkinState = ref.watch(
       transactionCheckinProvider(widget.transaction.id),
     );
+
     final categoryExists = categories.any(
       (category) => category.id == _selectedCategoryId,
     );
@@ -122,11 +133,15 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
               ),
               const SizedBox(height: 24),
             ],
+
             if (checkinState.hasError) ...[
               const Text('Could not load reflection status.'),
               const SizedBox(height: 24),
             ],
 
+            // ----------------------------------------------------------
+            // Amount
+            // ----------------------------------------------------------
             TextFormField(
               key: const Key('edit_expense_amount'),
               controller: _amountController,
@@ -137,21 +152,17 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
               decoration: InputDecoration(
                 labelText: 'Amount',
                 prefixText: '${widget.profile.currencyCode} ',
+                hintText: '0.00',
                 border: const OutlineInputBorder(),
               ),
-              validator: (value) {
-                final cents = _parseAmountCents(value);
-
-                if (cents == null || cents <= 0) {
-                  return 'Enter a valid amount greater than zero.';
-                }
-
-                return null;
-              },
+              validator: validateMoneyInput,
             ),
 
             const SizedBox(height: 24),
 
+            // ----------------------------------------------------------
+            // Category
+            // ----------------------------------------------------------
             DropdownButtonFormField<String>(
               key: const Key('edit_expense_category'),
               initialValue: categoryExists ? _selectedCategoryId : null,
@@ -180,7 +191,8 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
                       });
                     },
               validator: (value) {
-                if (value == null || !categories.any((c) => c.id == value)) {
+                if (value == null ||
+                    !categories.any((category) => category.id == value)) {
                   return 'Select a category.';
                 }
 
@@ -190,9 +202,19 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
 
             const SizedBox(height: 28),
 
+            // ----------------------------------------------------------
+            // Mood
+            // ----------------------------------------------------------
             Text(
               'How did this purchase feel?',
               style: Theme.of(context).textTheme.titleMedium,
+            ),
+
+            const SizedBox(height: 6),
+
+            Text(
+              'Choose the option that best describes why you made it.',
+              style: Theme.of(context).textTheme.bodySmall,
             ),
 
             const SizedBox(height: 14),
@@ -220,6 +242,7 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
                 );
               }).toList(),
             ),
+
             if (_selectedMood != null) ...[
               const SizedBox(height: 8),
               Text(_selectedMood!.explanation),
@@ -238,19 +261,28 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
 
             const SizedBox(height: 28),
 
+            // ----------------------------------------------------------
+            // Description
+            // ----------------------------------------------------------
             TextFormField(
               key: const Key('edit_expense_description'),
               controller: _descriptionController,
               enabled: !_isSaving,
-              maxLength: 200,
+              maxLength: maxTransactionDescriptionLength,
+              maxLengthEnforcement: MaxLengthEnforcement.enforced,
+              validator: validateTransactionDescription,
               decoration: const InputDecoration(
                 labelText: 'Description',
+                hintText: 'What did you buy?',
                 border: OutlineInputBorder(),
               ),
             ),
 
             const SizedBox(height: 12),
 
+            // ----------------------------------------------------------
+            // Date
+            // ----------------------------------------------------------
             ListTile(
               key: const Key('edit_expense_date'),
               contentPadding: EdgeInsets.zero,
@@ -262,6 +294,9 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
 
             const SizedBox(height: 32),
 
+            // ----------------------------------------------------------
+            // Save
+            // ----------------------------------------------------------
             FilledButton(
               key: const Key('edit_expense_save'),
               onPressed: _isSaving ? null : _save,
@@ -295,7 +330,7 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
       return;
     }
 
-    final amountCents = _parseAmountCents(_amountController.text);
+    final amountCents = parseMoneyInputToCents(_amountController.text);
 
     if (amountCents == null) {
       return;
@@ -333,7 +368,9 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not update expense: $error')),
+        const SnackBar(
+          content: Text('Could not update expense. Please try again.'),
+        ),
       );
     }
   }
@@ -353,40 +390,6 @@ class _ExpenseEditScreenState extends ConsumerState<ExpenseEditScreen> {
     setState(() {
       _selectedDate = date;
     });
-  }
-
-  int? _parseAmountCents(String? input) {
-    if (input == null) {
-      return null;
-    }
-
-    final value = input.trim().replaceAll(',', '').replaceAll('\$', '');
-
-    final match = RegExp(r'^(\d+)(?:\.(\d{1,2}))?$').firstMatch(value);
-
-    if (match == null) {
-      return null;
-    }
-
-    final dollars = int.parse(match.group(1)!);
-
-    final decimal = match.group(2);
-
-    final cents = decimal == null
-        ? 0
-        : decimal.length == 1
-        ? int.parse(decimal) * 10
-        : int.parse(decimal);
-
-    return (dollars * 100) + cents;
-  }
-
-  String _formatInputAmount(int cents) {
-    final dollars = cents ~/ 100;
-    final remainder = cents % 100;
-
-    return '$dollars.'
-        '${remainder.toString().padLeft(2, '0')}';
   }
 
   String _moodLabel(MoodTag mood) {

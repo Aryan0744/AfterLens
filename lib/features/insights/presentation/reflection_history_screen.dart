@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/formatting/money_display.dart';
 import '../../mood_engine/domain/regret_response.dart';
 import '../../profile/domain/app_profile.dart';
 import '../../transactions/domain/transaction_types.dart';
@@ -14,6 +15,7 @@ class ReflectionHistoryScreen extends ConsumerWidget {
     this.mood,
     this.categoryId,
     this.filterByCategory = false,
+    this.filterLabel,
     super.key,
   });
 
@@ -21,10 +23,14 @@ class ReflectionHistoryScreen extends ConsumerWidget {
   final MoodTag? mood;
   final String? categoryId;
   final bool filterByCategory;
+  final String? filterLabel;
+
+  bool get _isFiltered => mood != null || filterByCategory;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final history = ref.watch(completedReflectionsProvider(profile.id));
+
     return Scaffold(
       appBar: AppBar(title: const Text('Reflection History')),
       body: SafeArea(
@@ -36,8 +42,9 @@ class ReflectionHistoryScreen extends ConsumerWidget {
               children: [
                 const Text('Could not load reflection history.'),
                 TextButton(
-                  onPressed: () =>
-                      ref.invalidate(completedReflectionsProvider(profile.id)),
+                  onPressed: () {
+                    ref.invalidate(completedReflectionsProvider(profile.id));
+                  },
                   child: const Text('Try again'),
                 ),
               ],
@@ -54,21 +61,28 @@ class ReflectionHistoryScreen extends ConsumerWidget {
                     .toList()
                   ..sort((a, b) {
                     final dateOrder = b.answeredAt.compareTo(a.answeredAt);
+
                     return dateOrder != 0
                         ? dateOrder
                         : a.transactionId.compareTo(b.transactionId);
                   });
+
             if (items.isEmpty) {
-              return const Center(
+              return Center(
                 child: Padding(
-                  padding: EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(24),
                   child: Text(
-                    'No completed reflections yet.\nAnswer a reflection to see it here.',
+                    _isFiltered
+                        ? 'No completed reflections '
+                              'for ${filterLabel ?? 'this group'}.'
+                        : 'No completed reflections yet.\n'
+                              'Answer a reflection to see it here.',
                     textAlign: TextAlign.center,
                   ),
                 ),
               );
             }
+
             return ListView.builder(
               key: const Key('reflection_history_list'),
               padding: const EdgeInsets.all(24),
@@ -77,13 +91,29 @@ class ReflectionHistoryScreen extends ConsumerWidget {
                 if (index == 0) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16),
-                    child: Text(
-                      '${items.length} reviewed purchases${mood != null || filterByCategory ? ' in this group' : ''}. '
-                      'Details are saved when you reflect. Editing or removing a '
-                      'transaction does not change these answers.',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (_isFiltered && filterLabel != null) ...[
+                          Text(
+                            filterLabel!,
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                        Text(
+                          '${items.length} '
+                          '${items.length == 1 ? 'reviewed purchase' : 'reviewed purchases'}'
+                          '${_isFiltered ? ' in this group' : ''}. '
+                          'Details are saved when you reflect. '
+                          'Editing or removing a transaction '
+                          'does not change these answers.',
+                        ),
+                      ],
                     ),
                   );
                 }
+
                 return _ReflectionCard(
                   reflection: items[index - 1],
                   currencyCode: profile.currencyCode,
@@ -106,38 +136,57 @@ class _ReflectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = reflection;
+
     final dates = MaterialLocalizations.of(context);
+
     final description = r.description?.trim();
+
     final category = r.categoryName?.trim();
+
     return Card(
-      key: ValueKey('reflection_history_${r.transactionId}'),
+      key: ValueKey(
+        'reflection_history_'
+        '${r.transactionId}',
+      ),
       child: Padding(
         padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Reflected ${dates.formatShortDate(r.answeredAt.toLocal())}',
+              'Reflected '
+              '${dates.formatShortDate(r.answeredAt.toLocal())}',
               style: Theme.of(context).textTheme.bodySmall,
             ),
+
             const SizedBox(height: 8),
+
             Text(
               description == null || description.isEmpty
                   ? 'Purchase'
                   : description,
               style: Theme.of(context).textTheme.titleMedium,
             ),
+
             const SizedBox(height: 8),
+
             Text(
-              '$currencyCode ${r.amountCents ~/ 100}.${(r.amountCents % 100).toString().padLeft(2, '0')}',
+              '$currencyCode '
+              '${formatMoneyCents(r.amountCents, currencyCode: currencyCode)}',
             ),
+
             Text(
-              '${category == null || category.isEmpty ? 'Category not recorded' : category} • ${r.moodTag?.label ?? 'Mood not recorded'}',
+              '${category == null || category.isEmpty ? 'Category not recorded' : category} '
+              '• ${r.moodTag?.label ?? 'Mood not recorded'}',
             ),
+
             Text(
-              'Purchased ${dates.formatShortDate(r.transactionDate.toLocal())}',
+              'Purchased '
+              '${dates.formatShortDate(r.transactionDate.toLocal())}',
             ),
+
             const SizedBox(height: 8),
+
             Text(switch (r.response) {
               RegretResponse.worthIt => 'Worth it',
               RegretResponse.regret => 'Regret',

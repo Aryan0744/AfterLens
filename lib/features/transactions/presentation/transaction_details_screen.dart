@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/formatting/money_display.dart';
 import '../../../core/providers/repository_providers.dart';
 import '../../categories/presentation/category_providers.dart';
+import '../../insights/presentation/behavioral_insights_provider.dart';
+import '../../mood_engine/domain/regret_response.dart';
 import '../../profile/domain/app_profile.dart';
 import '../domain/app_transaction.dart';
 import '../domain/transaction_types.dart';
@@ -39,6 +42,10 @@ class _TransactionDetailsScreenState
   Widget build(BuildContext context) {
     final categoriesState = ref.watch(categoriesProvider(widget.profile.id));
 
+    final reflectionsState = ref.watch(
+      completedReflectionsProvider(widget.profile.id),
+    );
+
     final categoryName = categoriesState.maybeWhen(
       data: (categories) {
         for (final category in categories) {
@@ -53,6 +60,19 @@ class _TransactionDetailsScreenState
       orElse: () => 'Loading...',
     );
 
+    final completedReflection = reflectionsState.maybeWhen(
+      data: (reflections) {
+        for (final reflection in reflections) {
+          if (reflection.transactionId == _transaction.id) {
+            return reflection;
+          }
+        }
+
+        return null;
+      },
+      orElse: () => null,
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Transaction'),
@@ -60,6 +80,7 @@ class _TransactionDetailsScreenState
           if (_transaction.isExpense)
             IconButton(
               key: const Key('transaction_edit'),
+              tooltip: 'Edit expense',
               onPressed: _isDeleting ? null : _edit,
               icon: const Icon(Icons.edit_outlined),
             ),
@@ -71,8 +92,9 @@ class _TransactionDetailsScreenState
           children: [
             Text(
               '${widget.profile.currencyCode} '
-              '${_formatMoney(_transaction.amountCents)}',
+              '${formatMoneyCents(_transaction.amountCents, currencyCode: widget.profile.currencyCode)}',
               style: Theme.of(context).textTheme.displaySmall,
+              softWrap: true,
             ),
 
             const SizedBox(height: 8),
@@ -103,6 +125,49 @@ class _TransactionDetailsScreenState
               label: 'Date',
               value: _formatDate(_transaction.transactionDate),
             ),
+
+            if (completedReflection != null) ...[
+              const SizedBox(height: 20),
+
+              Card(
+                key: const Key('transaction_reflection_status'),
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Reflection',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      _DetailRow(
+                        label: 'Answer',
+                        value: _reflectionLabel(completedReflection.response),
+                      ),
+
+                      _DetailRow(
+                        label: 'Reflected',
+                        value: _formatDate(
+                          completedReflection.answeredAt.toLocal(),
+                        ),
+                      ),
+
+                      const SizedBox(height: 4),
+
+                      Text(
+                        'This reflection is saved as historical '
+                        'evidence and does not change when the '
+                        'transaction is edited.',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
 
             const SizedBox(height: 32),
 
@@ -226,17 +291,14 @@ class _TransactionDetailsScreenState
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not delete transaction: $error')),
+        const SnackBar(
+          content: Text(
+            'Could not delete transaction. '
+            'Please try again.',
+          ),
+        ),
       );
     }
-  }
-
-  String _formatMoney(int cents) {
-    final dollars = cents ~/ 100;
-    final remainder = cents % 100;
-
-    return '$dollars.'
-        '${remainder.toString().padLeft(2, '0')}';
   }
 
   String _moodLabel(MoodTag mood) {
@@ -247,6 +309,14 @@ class _TransactionDetailsScreenState
       MoodTag.social => 'Social',
       MoodTag.subscription => 'Subscription',
       MoodTag.emergency => 'Emergency',
+    };
+  }
+
+  String _reflectionLabel(RegretResponse response) {
+    return switch (response) {
+      RegretResponse.worthIt => 'Worth it',
+      RegretResponse.regret => 'Regret',
+      RegretResponse.unsure => 'Unsure',
     };
   }
 
@@ -279,15 +349,47 @@ class _DetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textScale = MediaQuery.textScalerOf(context).scale(14) / 14;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
-          ),
-          Text(value, style: Theme.of(context).textTheme.titleSmall),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final shouldStack = constraints.maxWidth < 340 || textScale >= 1.4;
+
+          if (shouldStack) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: Theme.of(context).textTheme.bodyMedium),
+                const SizedBox(height: 4),
+                Text(value, style: Theme.of(context).textTheme.titleSmall),
+              ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 2,
+                child: Text(
+                  label,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  value,
+                  textAlign: TextAlign.end,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

@@ -21,7 +21,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration {
@@ -193,6 +193,17 @@ END
       },
       from6To7: (m, schema) async {
         await m.addColumn(schema.transactions, schema.transactions.deletedAt);
+      },
+      // ------------------------------------------------------------
+      // V7 -> V8
+      //
+      // Transactions:
+      // Remove the database-level 200 code-point description
+      // constraint. Description length is now validated using
+      // user-perceived characters in the application layer.
+      // ------------------------------------------------------------
+      from7To8: (m, schema) async {
+        await m.alterTable(TableMigration(schema.transactions));
       },
     );
 

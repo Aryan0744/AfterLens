@@ -940,10 +940,6 @@ class $TransactionsTable extends Transactions
     'description',
     aliasedName,
     true,
-    additionalChecks: GeneratedColumn.checkTextLength(
-      minTextLength: 1,
-      maxTextLength: 200,
-    ),
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
@@ -2883,10 +2879,11 @@ class $$ProfilesTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (categoriesRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Profile,
                           $ProfilesTable,
-                          Category
+                          Category,
+                          $CategoriesTable
                         >(
                           currentTable: table,
                           referencedTable: $$ProfilesTableReferences
@@ -2897,17 +2894,16 @@ class $$ProfilesTableTableManager
                                 table,
                                 p0,
                               ).categoriesRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.profileId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'profile_id',
                           typedResults: items,
                         ),
                       if (transactionsRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Profile,
                           $ProfilesTable,
-                          Transaction
+                          Transaction,
+                          $TransactionsTable
                         >(
                           currentTable: table,
                           referencedTable: $$ProfilesTableReferences
@@ -2918,10 +2914,8 @@ class $$ProfilesTableTableManager
                                 table,
                                 p0,
                               ).transactionsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.profileId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'profile_id',
                           typedResults: items,
                         ),
                     ];
@@ -3350,10 +3344,11 @@ class $$CategoriesTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (transactionsRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Category,
                           $CategoriesTable,
-                          Transaction
+                          Transaction,
+                          $TransactionsTable
                         >(
                           currentTable: table,
                           referencedTable: $$CategoriesTableReferences
@@ -3364,10 +3359,8 @@ class $$CategoriesTableTableManager
                                 table,
                                 p0,
                               ).transactionsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.categoryId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'category_id',
                           typedResults: items,
                         ),
                     ];
@@ -3975,10 +3968,11 @@ class $$TransactionsTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (regretCheckinsRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Transaction,
                           $TransactionsTable,
-                          RegretCheckin
+                          RegretCheckin,
+                          $RegretCheckinsTable
                         >(
                           currentTable: table,
                           referencedTable: $$TransactionsTableReferences
@@ -3989,10 +3983,8 @@ class $$TransactionsTableTableManager
                                 table,
                                 p0,
                               ).regretCheckinsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.transactionId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'transaction_id',
                           typedResults: items,
                         ),
                     ];

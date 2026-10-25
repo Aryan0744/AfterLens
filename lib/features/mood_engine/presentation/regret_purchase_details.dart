@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/formatting/money_display.dart';
 import '../../categories/presentation/category_providers.dart';
-
 import '../../transactions/domain/app_transaction.dart';
 import '../../transactions/domain/transaction_types.dart';
 
@@ -19,6 +19,7 @@ class RegretPurchaseDetails extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final categories = ref.watch(categoriesProvider(transaction.profileId));
+
     final categoryName = categories.when(
       loading: () => 'Loading category…',
       error: (error, stackTrace) => 'Could not load category',
@@ -29,10 +30,14 @@ class RegretPurchaseDetails extends ConsumerWidget {
               ?.name ??
           'Category not recorded',
     );
+
     final description = transaction.description?.trim();
-    final amount = transaction.amountCents;
-    final money =
-        '${amount ~/ 100}.${(amount % 100).toString().padLeft(2, '0')}';
+
+    final money = formatMoneyCents(
+      transaction.amountCents,
+      currencyCode: currencyCode,
+    );
+
     final mood = switch (transaction.moodTag) {
       MoodTag.want => 'Want',
       MoodTag.impulse => 'Impulse',

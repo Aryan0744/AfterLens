@@ -44,8 +44,7 @@ class Transactions extends Table {
   IntColumn get amountCents => integer()();
 
   /// Optional user-facing transaction description.
-  TextColumn get description =>
-      text().withLength(min: 1, max: 200).nullable()();
+  TextColumn get description => text().nullable()();
 
   /// Behavioural spending tag.
   ///

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 
+import '../../../core/formatting/money_input.dart';
 import '../../categories/domain/app_category.dart';
-import '../../categories/presentation/category_providers.dart';
 import '../../categories/presentation/category_management_screen.dart';
+import '../../categories/presentation/category_providers.dart';
 import '../../profile/domain/app_profile.dart';
 import '../domain/transaction_types.dart';
 import 'transaction_entry_controller.dart';
+import '../../../core/validation/transaction_description.dart';
 
 class ExpenseEntryScreen extends ConsumerStatefulWidget {
   const ExpenseEntryScreen({required this.profile, super.key});
@@ -54,17 +57,15 @@ class _ExpenseEntryScreenState extends ConsumerState<ExpenseEntryScreen> {
             return const Center(child: CircularProgressIndicator());
           },
           error: (error, stackTrace) {
-            return Center(
+            return const Center(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.all(24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.error_outline, size: 48),
-                    const SizedBox(height: 16),
-                    const Text('Could not load categories.'),
-                    const SizedBox(height: 8),
-                    Text(error.toString(), textAlign: TextAlign.center),
+                    Icon(Icons.error_outline, size: 48),
+                    SizedBox(height: 16),
+                    Text('Could not load categories.'),
                   ],
                 ),
               ),
@@ -81,14 +82,17 @@ class _ExpenseEntryScreenState extends ConsumerState<ExpenseEntryScreen> {
                       const Text(
                         'Create or restore a category to record an expense.',
                       ),
+                      const SizedBox(height: 8),
                       TextButton(
-                        onPressed: () => Navigator.of(context).push<void>(
-                          MaterialPageRoute(
-                            builder: (context) => CategoryManagementScreen(
-                              profile: widget.profile,
+                        onPressed: () {
+                          Navigator.of(context).push<void>(
+                            MaterialPageRoute(
+                              builder: (context) => CategoryManagementScreen(
+                                profile: widget.profile,
+                              ),
                             ),
-                          ),
-                        ),
+                          );
+                        },
                         child: const Text('Manage categories'),
                       ),
                     ],
@@ -96,6 +100,7 @@ class _ExpenseEntryScreenState extends ConsumerState<ExpenseEntryScreen> {
                 ),
               );
             }
+
             return _buildForm(context, categories, transactionState.isLoading);
           },
         ),
@@ -145,15 +150,7 @@ class _ExpenseEntryScreenState extends ConsumerState<ExpenseEntryScreen> {
                 hintText: '0.00',
                 border: const OutlineInputBorder(),
               ),
-              validator: (value) {
-                final cents = _parseAmountCents(value);
-
-                if (cents == null || cents <= 0) {
-                  return 'Enter a valid amount greater than zero.';
-                }
-
-                return null;
-              },
+              validator: validateMoneyInput,
             ),
 
             const SizedBox(height: 24),
@@ -241,6 +238,7 @@ class _ExpenseEntryScreenState extends ConsumerState<ExpenseEntryScreen> {
                 );
               }).toList(),
             ),
+
             if (_selectedMood != null) ...[
               const SizedBox(height: 8),
               Text(_selectedMood!.explanation),
@@ -266,7 +264,9 @@ class _ExpenseEntryScreenState extends ConsumerState<ExpenseEntryScreen> {
               key: const Key('expense_description'),
               controller: _descriptionController,
               enabled: !isSaving,
-              maxLength: 200,
+              maxLength: maxTransactionDescriptionLength,
+              maxLengthEnforcement: MaxLengthEnforcement.enforced,
+              validator: validateTransactionDescription,
               decoration: const InputDecoration(
                 labelText: 'Description',
                 hintText: 'What did you buy?',
@@ -311,8 +311,9 @@ class _ExpenseEntryScreenState extends ConsumerState<ExpenseEntryScreen> {
             const SizedBox(height: 12),
 
             Text(
-              'Want and Impulse purchases over \$15 may receive '
-              'a reflection check-in later.',
+              'Want and Impulse purchases above '
+              '${widget.profile.currencyCode} 15.00 may receive '
+              'a reflection check-in two days later.',
               style: Theme.of(context).textTheme.bodySmall,
               textAlign: TextAlign.center,
             ),
@@ -352,7 +353,7 @@ class _ExpenseEntryScreenState extends ConsumerState<ExpenseEntryScreen> {
       return;
     }
 
-    final amountCents = _parseAmountCents(_amountController.text);
+    final amountCents = parseMoneyInputToCents(_amountController.text);
 
     if (amountCents == null) {
       return;
@@ -388,36 +389,12 @@ class _ExpenseEntryScreenState extends ConsumerState<ExpenseEntryScreen> {
         return;
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not save expense: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not save expense. Please try again.'),
+        ),
+      );
     }
-  }
-
-  int? _parseAmountCents(String? input) {
-    if (input == null) {
-      return null;
-    }
-
-    final value = input.trim().replaceAll(',', '').replaceAll('\$', '');
-
-    final match = RegExp(r'^(\d+)(?:\.(\d{1,2}))?$').firstMatch(value);
-
-    if (match == null) {
-      return null;
-    }
-
-    final dollars = int.parse(match.group(1)!);
-
-    final decimalPart = match.group(2);
-
-    final cents = decimalPart == null
-        ? 0
-        : decimalPart.length == 1
-        ? int.parse(decimalPart) * 10
-        : int.parse(decimalPart);
-
-    return (dollars * 100) + cents;
   }
 
   String _moodLabel(MoodTag mood) {

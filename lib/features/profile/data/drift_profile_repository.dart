@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../core/formatting/currency_support.dart';
 import '../domain/app_profile.dart';
 import '../domain/profile_repository.dart';
 
@@ -115,17 +116,17 @@ class DriftProfileRepository implements ProfileRepository {
   }
 
   String _normalizeCurrency(String currencyCode) {
-    final value = currencyCode.trim().toUpperCase();
+    final normalized = normalizeSupportedCurrencyCode(currencyCode);
 
-    if (!RegExp(r'^[A-Z]{3}$').hasMatch(value)) {
+    if (normalized == null) {
       throw ArgumentError.value(
         currencyCode,
         'currencyCode',
-        'Currency code must contain exactly three letters.',
+        'Currency must be a supported ISO currency with two decimal digits.',
       );
     }
 
-    return value;
+    return normalized;
   }
 
   AppProfile _mapProfile(Profile row) {
