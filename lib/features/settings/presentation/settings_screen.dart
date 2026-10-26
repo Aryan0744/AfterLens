@@ -9,6 +9,7 @@ import '../../bootstrap/presentation/app_bootstrap_controller.dart';
 import '../../bootstrap/presentation/reflection_guide.dart';
 import '../../categories/presentation/category_management_screen.dart';
 import '../../profile/domain/app_profile.dart';
+import 'privacy_data_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({required this.profile, super.key});
@@ -61,6 +62,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const Divider(height: 32),
 
             Text('Your data', style: theme.textTheme.titleLarge),
+
+            const SizedBox(height: 8),
+
+            ListTile(
+              key: const Key('settings_privacy_data'),
+              leading: const Icon(Icons.shield_outlined),
+              title: const Text('Privacy & data'),
+              subtitle: const Text(
+                'How AfterLens stores, exports and deletes your data',
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: _isExporting || _isDeleting
+                  ? null
+                  : () {
+                      Navigator.of(context).push<void>(
+                        MaterialPageRoute(
+                          builder: (context) {
+                            return const PrivacyDataScreen();
+                          },
+                        ),
+                      );
+                    },
+            ),
 
             const SizedBox(height: 8),
 
@@ -247,8 +271,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         return;
       }
 
-      // Settings is a child route of the bootstrap-controlled root.
-      // Return to that root so AppBootstrapGate can show onboarding.
       Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (error) {
       if (!mounted) {

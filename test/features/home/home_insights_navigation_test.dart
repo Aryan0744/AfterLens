@@ -6,6 +6,7 @@ import 'package:afterlens/features/insights/presentation/insights_screen.dart';
 import 'package:afterlens/features/insights/presentation/reflection_history_screen.dart';
 import 'package:afterlens/features/profile/data/drift_profile_repository.dart';
 import 'package:afterlens/features/profile/domain/app_profile.dart';
+import 'package:afterlens/features/settings/presentation/privacy_data_screen.dart';
 import 'package:afterlens/features/settings/presentation/settings_screen.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -64,7 +65,7 @@ void main() {
     await disposeTestApp(tester);
   });
 
-  testWidgets('Home opens history and settings category management', (
+  testWidgets('Home opens history, privacy data, and category management', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -94,6 +95,25 @@ void main() {
     expect(find.byType(SettingsScreen), findsOneWidget);
 
     expect(find.text('Settings'), findsOneWidget);
+
+    expect(find.byKey(const Key('settings_privacy_data')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('settings_privacy_data')));
+
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PrivacyDataScreen), findsOneWidget);
+
+    expect(find.text('Privacy & data'), findsOneWidget);
+
+    expect(find.text('Stored locally'), findsOneWidget);
+
+    expect(find.text('No cloud sync'), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SettingsScreen), findsOneWidget);
 
     expect(find.byKey(const Key('settings_categories')), findsOneWidget);
 
