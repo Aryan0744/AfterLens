@@ -17,6 +17,7 @@ import '../../features/profile/domain/profile_repository.dart';
 import '../../features/transactions/application/transaction_management_service.dart';
 import '../../features/transactions/data/drift_transaction_repository.dart';
 import '../../features/transactions/domain/transaction_repository.dart';
+import '../../features/data_erasure/application/data_erasure_service.dart';
 import '../database/database_provider.dart';
 
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
@@ -108,4 +109,8 @@ final transactionManagementServiceProvider =
 
 final dataExportServiceProvider = Provider<DataExportService>((ref) {
   return DataExportService(ref.watch(appDatabaseProvider));
+});
+
+final dataErasureServiceProvider = Provider<DataErasureService>((ref) {
+  return DataErasureService(ref.watch(appDatabaseProvider));
 });

@@ -49,4 +49,33 @@ class AppBootstrapController extends AsyncNotifier<AppBootstrapResult> {
       return service.initialize();
     });
   }
+
+  Future<void> eraseAllLocalData() async {
+    final previousState = state;
+    var eraseCompleted = false;
+
+    state = const AsyncLoading();
+
+    try {
+      final erasureService = ref.read(dataErasureServiceProvider);
+
+      await erasureService.eraseAllLocalData();
+
+      eraseCompleted = true;
+
+      final bootstrapService = ref.read(appBootstrapServiceProvider);
+
+      final result = await bootstrapService.initialize();
+
+      state = AsyncData(result);
+    } catch (error, stackTrace) {
+      if (eraseCompleted) {
+        state = AsyncError(error, stackTrace);
+      } else {
+        state = previousState;
+      }
+
+      Error.throwWithStackTrace(error, stackTrace);
+    }
+  }
 }
