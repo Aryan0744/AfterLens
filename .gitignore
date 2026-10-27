@@ -46,3 +46,21 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+
+# Signing / certificate material
+*.jks
+*.keystore
+*.p12
+*.p8
+*.mobileprovision
+
+# Service configuration
+google-services.json
+GoogleService-Info.plist
+
+# Android release signing
+android/key.properties
