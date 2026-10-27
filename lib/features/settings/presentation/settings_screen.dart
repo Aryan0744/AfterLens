@@ -1,7 +1,9 @@
-import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/providers/repository_providers.dart';
@@ -308,6 +310,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ? null
         : box.localToGlobal(Offset.zero) & box.size;
 
+    File? temporaryExportFile;
+
     setState(() {
       _isExporting = true;
     });
@@ -326,6 +330,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final fileName =
           'afterlens-export-${_fileTimestamp(DateTime.now())}.json';
 
+      final temporaryDirectory = await getTemporaryDirectory();
+
+      temporaryExportFile = File(p.join(temporaryDirectory.path, fileName));
+
+      await temporaryExportFile.writeAsString(json, flush: true);
+
+      if (!mounted) {
+        return;
+      }
+
       await SharePlus.instance.share(
         ShareParams(
           title: 'AfterLens Data Export',
@@ -334,9 +348,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               'Your AfterLens data export. '
               'Keep this file somewhere private and secure.',
           files: [
-            XFile.fromData(utf8.encode(json), mimeType: 'application/json'),
+            XFile(temporaryExportFile.path, mimeType: 'application/json'),
           ],
-          fileNameOverrides: [fileName],
           sharePositionOrigin: sharePositionOrigin,
         ),
       );
@@ -356,6 +369,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         );
     } finally {
+      if (temporaryExportFile != null) {
+        try {
+          if (await temporaryExportFile.exists()) {
+            await temporaryExportFile.delete();
+          }
+        } on FileSystemException {
+          // Cleanup failure is intentionally ignored.
+          // Internal filesystem details should not be shown to the user.
+        }
+      }
+
       if (mounted) {
         setState(() {
           _isExporting = false;

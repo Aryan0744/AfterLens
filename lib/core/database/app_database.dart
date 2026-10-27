@@ -1,10 +1,7 @@
-import 'dart:io';
-
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
+import '../storage/app_storage.dart';
 import '../../features/categories/data/categories_table.dart';
 import '../../features/mood_engine/data/regret_checkins_table.dart';
 import '../../features/profile/data/profiles_table.dart';
@@ -258,9 +255,7 @@ END
 
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
-    final dbFolder = await getApplicationDocumentsDirectory();
-
-    final file = File(p.join(dbFolder.path, 'afterlens.sqlite'));
+    final file = await getAppDatabaseFile();
 
     return NativeDatabase.createInBackground(file);
   });
